@@ -1,10 +1,13 @@
 // routes/userRoutes.js
+
 const express = require("express");
 const router = express.Router();
-const { getUsers, createUser } = require("../controllers/userController");
+const userController = require("../controllers/userController");
 
-// GET và POST
-router.get("/", getUsers);
-router.post("/", createUser);
+// Danh sách user
+router.get("/", userController.getUsers);
+
+// Tạo user mới
+router.post("/", userController.createUser);
 
 module.exports = router;

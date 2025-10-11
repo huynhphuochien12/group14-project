@@ -6,9 +6,9 @@ const app = express();
 app.use(express.json());
 
 // ✅ Kết nối MongoDB Atlas
-mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/groupBD?retryWrites=true&w=majority")
+mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/groupDB?retryWrites=true&w=majority&appName=Cluster0")
   .then(() => console.log("✅ Kết nối MongoDB thành công"))
-  .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
+  .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
 
 // ✅ POST: thêm user
 app.post("/users", async (req, res) => {
@@ -28,3 +28,4 @@ app.get("/users", async (req, res) => {
 });
 
 app.listen(5000, () => console.log("🚀 Server chạy tại http://localhost:5000"));
+

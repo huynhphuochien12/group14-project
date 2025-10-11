@@ -1,28 +1,27 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const User = require("./User"); // nhớ import model
+const User = require("./User");
 
 const app = express();
 app.use(express.json());
 
-// Kết nối MongoDB Atlas
+// ✅ Kết nối MongoDB Atlas
 mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/groupBD?retryWrites=true&w=majority")
   .then(() => console.log("✅ Kết nối MongoDB thành công"))
   .catch(err => console.error("❌ Lỗi kết nối MongoDB:", err));
 
-
-// ✅ Thêm user vào MongoDB
+// ✅ POST: thêm user
 app.post("/users", async (req, res) => {
   try {
-    const newUser = new User(req.body); // tạo user theo model
-    await newUser.save(); // LƯU thật vào database
-    res.status(201).json(newUser); // trả lại user đã lưu (có _id)
+    const newUser = new User(req.body);
+    await newUser.save();
+    res.status(201).json(newUser);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ Xem toàn bộ users (để kiểm tra lại)
+// ✅ GET: xem toàn bộ user
 app.get("/users", async (req, res) => {
   const users = await User.find();
   res.json(users);

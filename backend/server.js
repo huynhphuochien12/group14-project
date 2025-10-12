@@ -1,8 +1,16 @@
+<<<<<<< HEAD
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+const userRoutes = require("./routes/userRoutes");
+=======
 // // const express = require("express");
 // // const mongoose = require("mongoose");
 // // backend
 // // const cors = require("cors");
 // // require("dotenv").config({ path: __dirname + "/.env" });
+>>>>>>> afb139a6b57fc65949e733b4c16575b95c313fd0
 
 
 // // const app = express();
@@ -101,10 +109,33 @@ const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
-
 const app = express();
-app.use(express.json()); // Đọc dữ liệu JSON từ body
+<<<<<<< HEAD
 
+// Cấu hình CORS cho React frontend
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+  })
+);
+
+// Cho phép đọc JSON từ body request
+app.use(express.json());
+
+// Định tuyến API
+app.use("/api/users", userRoutes);
+=======
+app.use(express.json()); // Đọc dữ liệu JSON từ body
+>>>>>>> afb139a6b57fc65949e733b4c16575b95c313fd0
+
+// Kết nối MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
+// Khởi động server
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 

@@ -1,3 +1,5 @@
+<<<<<<< HEAD
+=======
 // const mongoose = require("mongoose");
 
 // // Định nghĩa cấu trúc (schema) cho bảng "users"
@@ -22,6 +24,7 @@
 
 // // Xuất model để có thể import ở nơi khác (vd: userRoutes.js)
 // module.exports = mongoose.model("User", userSchema);
+>>>>>>> afb139a6b57fc65949e733b4c16575b95c313fd0
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({

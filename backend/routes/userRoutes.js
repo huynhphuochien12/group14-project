@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+const express = require("express");
+const router = express.Router();
+const { getUsers, createUser, deleteUser } = require("../controllers/userController");
+=======
 // // // routes/userRoutes.js
 
 // // const express = require("express");
@@ -41,11 +46,15 @@ const {
   updateUser,
   deleteUser,
 } = require("../controllers/userController");
+>>>>>>> afb139a6b57fc65949e733b4c16575b95c313fd0
 
 router.get("/", getUsers);
 router.post("/", createUser);
 router.put("/:id", updateUser);    // ✅ PUT
 router.delete("/:id", deleteUser); // ✅ DELETE
+
+// DELETE
+router.delete("/:id", deleteUser);
 
 module.exports = router;
 

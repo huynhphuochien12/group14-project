@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 // 📦 Lấy danh sách người dùng
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find(); // Lấy tất cả user trong MongoDB
+    const users = await User.find();
     res.json(users);
   } catch (err) {
     console.error("❌ Lỗi khi lấy danh sách user:", err);

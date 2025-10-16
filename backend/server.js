@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config(); // đọc file .env
+require("dotenv").config();
 
 const app = express();
 
@@ -9,15 +9,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const profileRoutes = require("./routes/profileRoutes");
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/profile", profileRoutes);
+
 // Kết nối MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err.message));
-
-// Routes
-const userRoutes = require("./routes/userRoutes");
-app.use("/api/users", userRoutes);
 
 // Kiểm tra server
 app.get("/", (req, res) => {

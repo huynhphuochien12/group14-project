@@ -1,114 +1,124 @@
-// // const express = require("express");
-// // const mongoose = require("mongoose");
-// // const User = require("./User");
-
-// // const app = express();
-// // app.use(express.json());
-
-// // // ✅ Kết nối MongoDB Atlas
-// // mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/group14DB?retryWrites=true&w=majority&appName=Cluster0")
-// //   .then(() => console.log("✅ Kết nối MongoDB thành công"))
-// //   .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
-
-// // // ✅ POST: thêm user
-// // app.post("/users", async (req, res) => {
-// //   try {
-// //     const newUser = new User(req.body);
-// //     await newUser.save();
-// //     res.status(201).json(newUser);
-// //   } catch (err) {
-// //     res.status(500).json({ error: err.message });
-// //   }
-// // });
-
-// // // ✅ GET: xem toàn bộ user
-// // app.get("/users", async (req, res) => {
-// //   const users = await User.find();
-// //   res.json(users);
-// // });
-
-// // app.listen(5000, () => console.log("🚀 Server chạy tại http://localhost:5000"));
-
-// // ✅ Import thư viện cần thiết
-// import express from 'express';
-// import mongoose from 'mongoose';
-// import User from './User.js'; // import model user nếu có
-
-// const app = express();
-// app.use(express.json());
-
-// // ✅ Kết nối MongoDB
-// mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/group14DB?retryWrites=true&w=majority&appName=Cluster0")
-//   .then(async () => {
-//     console.log('✅ Kết nối MongoDB thành công');
-
-//     // Test thêm user (chạy 1 lần)
-//     try {
-//       const newUser = new User({
-//         name: 'Test User',
-//         email: `test${Date.now()}@example.com`,
-//         password: '123456'
-//       });
-//       await newUser.save();
-//       console.log('👤 User đã được thêm vào database!');
-//     } catch (err) {
-//       console.error('⚠️ Lỗi khi thêm user:', err.message);
-//     }
-//   })
-//   .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
-
-// // ✅ Chạy server
-// app.listen(5000, () => console.log('🚀 Server chạy tại http://localhost:5000'));
-
-// ✅ 1. Import thư viện
+// =======================
+// 🔹 Import thư viện
+// =======================
 import express from 'express';
 import mongoose from 'mongoose';
-import User from './User.js'; // import file User.js (model user)
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import User from './User.js';
 
-// ✅ 2. Khởi tạo Express app
+// =======================
+// 🔹 Tạo app + middleware
+// =======================
 const app = express();
-app.use(express.json()); // Cho phép đọc dữ liệu JSON từ body
+app.use(express.json());
+app.use(cors());
 
-// ✅ 3. Kết nối MongoDB (sửa đúng link của bạn)
-mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/group14DB?retryWrites=true&w=majority&appName=Cluster0")
-  .then(async () => {
-    console.log('✅ Kết nối MongoDB thành công');
+// 🔑 Khóa bí mật JWT
+const JWT_SECRET = 'group14_secret_key';
 
-    // Thêm user test vào database (chạy 1 lần để kiểm tra)
-    try {
-      const newUser = new User({
-        name: 'Test User',
-        email: `test${Date.now()}@example.com`,
-        password: '123456'
-      });
-      await newUser.save();
-      console.log('👤 User test đã được thêm vào database!');
-    } catch (err) {
-      console.error('⚠️ Lỗi khi thêm user test:', err.message);
-    }
-  })
+// ✅ Kết nối MongoDB
+mongoose.connect('mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/group14DB')
+  .then(() => console.log('✅ Kết nối MongoDB thành công'))
   .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
 
-// ✅ 4. API thêm user (đây là phần test trên Postman)
-app.post('/add-user', async (req, res) => {
+// =======================
+// 🔹 API ĐĂNG KÝ
+// =======================
+app.post('/signup', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: '❌ Email đã tồn tại!' });
 
-    // Tạo user mới
-    const newUser = new User({ name, email, password, role });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashedPassword, role });
     await newUser.save();
 
-    res.status(201).json({
-      message: '✅ User đã được thêm thành công!',
-      user: newUser
-    });
-  } catch (err) {
-    res.status(400).json({
-      message: '❌ Lỗi khi thêm user!',
-      error: err.message
-    });
+    const userResponse = newUser.toObject();
+    delete userResponse.password;
+
+    res.json({ message: '✅ Đăng ký thành công!', user: userResponse });
+  } catch (error) {
+    res.status(500).json({ message: '⚠️ Lỗi khi đăng ký!', error: error.message });
   }
 });
 
-// ✅ 5. Khởi động server
+// =======================
+// 🔹 API ĐĂNG NHẬP
+// =======================
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: '❌ Email không tồn tại!' });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: '❌ Sai mật khẩu!' });
+
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+    res.json({ message: '✅ Đăng nhập thành công!', token });
+  } catch (error) {
+    res.status(500).json({ message: '⚠️ Lỗi khi đăng nhập!', error: error.message });
+  }
+});
+
+// =======================
+// 🔹 API ĐĂNG XUẤT
+// =======================
+app.post('/logout', (req, res) => {
+  res.json({ message: '✅ Đăng xuất thành công (client đã xóa token)!' });
+});
+
+// =======================
+// 🔹 Middleware xác thực token (JWT)
+// =======================
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: '❌ Thiếu token!' });
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: '❌ Token không hợp lệ!' });
+  }
+};
+
+// =======================
+// 🔹 API xem thông tin cá nhân (GET /profile)
+// =======================
+app.get('/profile', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ message: '❌ Không tìm thấy user!' });
+    res.json({ message: '✅ Lấy thông tin thành công!', user });
+  } catch (error) {
+    res.status(500).json({ message: '⚠️ Lỗi server!', error: error.message });
+  }
+});
+
+// =======================
+// 🔹 API cập nhật thông tin cá nhân (PUT /profile)
+// =======================
+app.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, role } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { name, role },
+      { new: true }
+    ).select('-password');
+
+    res.json({ message: '✅ Cập nhật thông tin thành công!', user: updatedUser });
+  } catch (error) {
+    res.status(500).json({ message: '⚠️ Lỗi cập nhật!', error: error.message });
+  }
+});
+
+// =======================
+// 🔹 Chạy server
+// =======================
 app.listen(5000, () => console.log('🚀 Server chạy tại http://localhost:5000'));

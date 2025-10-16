@@ -1,123 +1,68 @@
-// // const express = require("express");
-// // const mongoose = require("mongoose");
-// // backend
-// // const cors = require("cors");
-// // require("dotenv").config({ path: __dirname + "/.env" });
+// require("dotenv").config(); // ✅ Nạp biến môi trường từ file .env
 
-
-// // const app = express();
-// // app.use(cors());
-// // app.use(express.json());
-
-// // // 👉 Kết nối MongoDB
-// // mongoose
-// // .connect(process.env.MONGO_URI, {
-// //     useNewUrlParser: true,
-// //     useUnifiedTopology: true,
-// // })
-// // .then(() => console.log("✅ MongoDB connected"))
-// // .catch((err) => console.error("❌ MongoDB connection error:", err));
-
-// // // 👉 Dùng route
-// // const userRoutes = require("./routes/userRoutes");
-// // app.use("/api/users", userRoutes); // ✅ route chính để frontend gọi
-
-// // const PORT = process.env.PORT || 5000;
-// // // 👉 Route kiểm tra server hoạt động
-// // app.get("/", (req, res) => {
-// // res.send("🚀 Backend is running");
-// // });
-
-// // // 👉 Route API trả danh sách user (demo)
-// // app.get("/api/users", async (req, res) => {
-// // try {
-// //     const users = await mongoose.connection.db.collection("users").find().toArray();
-// //     res.json(users);
-// // } catch (err) {
-// //     console.error("❌ Lỗi khi lấy danh sách người dùng:", err);
-// //     res.status(500).json({ message: "Lỗi server" });
-// // }
-// // });
-
-// // app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-// // const User = require("./User");
-
-// // const app = express();
-// // app.use(express.json());
-
-// // // ✅ Kết nối MongoDB Atlas
-// // mongoose.connect("mongodb+srv://phat220393:12345@cluster0.itkfnni.mongodb.net/groupDB?retryWrites=true&w=majority&appName=Cluster0")
-// // .then(() => console.log("✅ Kết nối MongoDB thành công"))
-// // .catch((err) => console.error("❌ Lỗi kết nối MongoDB:", err));
-
-// // // ✅ POST: thêm user
-// // app.post("/users", async (req, res) => {
-// // try {
-// //     const newUser = new User(req.body);
-// //     await newUser.save();
-// //     res.status(201).json(newUser);
-// // } catch (err) {
-// //     res.status(500).json({ error: err.message });
-// // }
-// // });
-
-// // // ✅ GET: xem toàn bộ user
-// // app.get("/users", async (req, res) => {
-// // const users = await User.find();
-// // res.json(users);
-// // });
-
-// // app.listen(5000, () => console.log("🚀 Server chạy tại http://localhost:5000"));
-// // main
-
-// // server.js
 // const express = require("express");
 // const mongoose = require("mongoose");
 // const cors = require("cors");
-// require("dotenv").config({ path: __dirname + "/.env" }); // ✅ đọc file .env trong thư mục backend
 
 // const app = express();
-// app.use(cors());
-// app.use(express.json());
 
-// // test xem dotenv có đọc được không
-// console.log("🔍 MONGO_URI =", process.env.MONGO_URI);
+// // Middleware
+// app.use(express.json());
+// app.use(cors());
+
+// // ✅ In ra kiểm tra xem MONGO_URI có được đọc không
+// console.log("DEBUG MONGO_URI =", process.env.MONGO_URI);
 
 // // ✅ Kết nối MongoDB
 // mongoose
 //   .connect(process.env.MONGO_URI)
 //   .then(() => console.log("✅ MongoDB connected"))
-//   .catch((err) => console.error("❌ MongoDB connection error:", err));
+//   .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
-// // ✅ Dùng route
+// // ✅ Import routes
 // const userRoutes = require("./routes/userRoutes");
 // app.use("/api/users", userRoutes);
 
+// // ✅ Khởi chạy server
 // const PORT = process.env.PORT || 5000;
-// app.get("/", (req, res) => res.send("🚀 Backend is running"));
 // app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+
+
+
+//======================
+
+
+
+require("dotenv").config(); // Nạp biến môi trường từ file .env
 
 const express = require("express");
 const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-dotenv.config();
+const cors = require("cors");
 
 const app = express();
-app.use(express.json()); // Đọc dữ liệu JSON từ body
 
-const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+// ===== Middleware =====
+app.use(express.json());
+app.use(cors());
 
-// 🔗 Kết nối MongoDB
+// ===== Kiểm tra biến môi trường =====
+console.log("DEBUG MONGO_URI =", process.env.MONGO_URI);
+
+// ===== Kết nối MongoDB =====
 mongoose
-  .connect(MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected successfully"))
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
-// Routes
+// ===== Import routes =====
 const userRoutes = require("./routes/userRoutes");
+const authRoutes = require("./routes/authRoutes"); // 🔒 thêm dòng này
+
+// ===== Sử dụng routes =====
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes); // 🔒 thêm dòng này
 
-// Start server
+// ===== Khởi chạy server =====
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-

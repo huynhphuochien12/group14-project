@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api"; // axios có baseURL: http://localhost:5000/api
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,33 +25,43 @@ export default function LoginForm() {
       // Nếu dùng Context thì vẫn giữ lại
       login(token, user);
 
-      setMessage("✅ Đăng nhập thành công!");
-      navigate("/profile");
+      addToast("Đăng nhập thành công!", 'success');
+      // Nếu là admin chuyển tới trang admin
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/profile");
+      }
     } catch (err) {
       console.error("❌ Lỗi đăng nhập:", err);
-      setMessage(err.response?.data?.message || "❌ Đăng nhập thất bại!");
+      addToast(err.response?.data?.message || "Đăng nhập thất bại", 'error');
     }
   };
 
   return (
-    <div className="auth-container">
-      <h2>Đăng nhập</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Mật khẩu"
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Đăng nhập</button>
-      </form>
-      {message && <p>{message}</p>}
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <h2 className="auth-title">Đăng nhập</h2>
+        <p className="auth-sub">Đăng nhập để tiếp tục đến trang cá nhân</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} required />
+          </div>
+
+          <div className="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" placeholder="Mật khẩu" onChange={(e) => setPassword(e.target.value)} required />
+          </div>
+
+          <div className="center">
+            <button className="btn" type="submit">Đăng nhập</button>
+          </div>
+        </form>
+
+        {/* toasts handle messages */}
+      </div>
     </div>
   );
 }

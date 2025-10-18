@@ -2,32 +2,23 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
-
+import { ToastProvider } from "./contexts/ToastContext";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import ProfilePage from "./components/profile/ProfilePage";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import AdminUserList from "./components/admin/AdminUserList";
+import HomePage from "./pages/HomePage";
+import AddUser from "./components/AddUser";
 
 function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <BrowserRouter>
         <Routes>
           {/* 🏠 Trang chính */}
-          <Route
-            path="/"
-            element={
-              <div style={{ textAlign: "center", marginTop: "60px" }}>
-                <h1>🧑‍💻 Ứng dụng Quản lý Người dùng</h1>
-                <p>Hãy đăng nhập để xem hoặc cập nhật thông tin cá nhân</p>
-                <a href="/login" style={{ marginRight: "15px" }}>
-                  👉 Đăng nhập
-                </a>
-                <a href="/register">✍️ Đăng ký</a>
-              </div>
-            }
-          />
+          <Route path="/" element={<HomePage />} />
 
           {/* 🔐 Đăng nhập */}
           <Route path="/login" element={<LoginForm />} />
@@ -54,8 +45,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/add"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AddUser />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
+      </ToastProvider>
     </AuthProvider>
   );
 }

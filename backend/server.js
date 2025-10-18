@@ -1,68 +1,43 @@
-// require("dotenv").config(); // ✅ Nạp biến môi trường từ file .env
-
-// const express = require("express");
-// const mongoose = require("mongoose");
-// const cors = require("cors");
-
-// const app = express();
-
-// // Middleware
-// app.use(express.json());
-// app.use(cors());
-
-// // ✅ In ra kiểm tra xem MONGO_URI có được đọc không
-// console.log("DEBUG MONGO_URI =", process.env.MONGO_URI);
-
-// // ✅ Kết nối MongoDB
-// mongoose
-//   .connect(process.env.MONGO_URI)
-//   .then(() => console.log("✅ MongoDB connected"))
-//   .catch((err) => console.error("❌ MongoDB connection error:", err.message));
-
-// // ✅ Import routes
-// const userRoutes = require("./routes/userRoutes");
-// app.use("/api/users", userRoutes);
-
-// // ✅ Khởi chạy server
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-
-
-
-
-//======================
-
-
-
-require("dotenv").config(); // Nạp biến môi trường từ file .env
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 
-// ===== Middleware =====
-app.use(express.json());
+// Middleware
 app.use(cors());
+app.use(express.json());
 
-// ===== Kiểm tra biến môi trường =====
-console.log("DEBUG MONGO_URI =", process.env.MONGO_URI);
+// Routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const profileRoutes = require("./routes/profileRoutes");
 
-// ===== Kết nối MongoDB =====
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/profile", profileRoutes);
+
+// Kết nối MongoDB
+if (!process.env.MONGO_URI) {
+  console.error("❌ Missing MONGO_URI in environment. Please set MONGO_URI in your .env file.");
+  process.exit(1);
+}
+
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
+  .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err.message));
 
-// ===== Import routes =====
-const userRoutes = require("./routes/userRoutes");
-const authRoutes = require("./routes/authRoutes"); // 🔒 thêm dòng này
+if (!process.env.JWT_SECRET) {
+  console.error("❌ Warning: JWT_SECRET is not set in environment. Authentication may fail.");
+}
 
-// ===== Sử dụng routes =====
-app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes); // 🔒 thêm dòng này
+// Kiểm tra server
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is running");
+});
 
-// ===== Khởi chạy server =====
+// Khởi động server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

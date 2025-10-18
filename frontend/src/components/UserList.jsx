@@ -1,45 +1,45 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/api";
 
 function UserList() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/users")
+    api
+      .get("/users")
       .then((res) => setUsers(res.data))
       .catch((err) => console.error(err));
   }, []);
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>👥 Quản lý người dùng</h1>
+    <div className="app-container">
+      <div className="site-header">
+        <h1 className="site-title">👥 Quản lý người dùng</h1>
+      </div>
 
-      <div style={styles.card}>
-        <h2 style={styles.subtitle}>Danh sách người dùng</h2>
+      <div className="card list-grid">
+        <h3>Danh sách người dùng</h3>
 
-        <table style={styles.table}>
+        <table className="user-table">
           <thead>
             <tr>
-              <th style={{ ...styles.th, width: "80px" }}>ID</th>
-              <th style={{ ...styles.th, width: "200px" }}>Tên</th>
-              <th style={{ ...styles.th, width: "300px" }}>Email</th>
+              <th style={{ width: '80px' }}>ID</th>
+              <th style={{ width: '200px' }}>Tên</th>
+              <th style={{ width: '300px' }}>Email</th>
             </tr>
           </thead>
           <tbody>
             {users.length > 0 ? (
               users.map((u) => (
-                <tr key={u.id} style={styles.tr}>
-                  <td style={styles.td}>{u.id}</td>
-                  <td style={styles.td}>{u.name}</td>
-                  <td style={styles.td}>{u.email}</td>
+                <tr key={u._id}>
+                  <td>{u._id}</td>
+                  <td>{u.name}</td>
+                  <td>{u.email}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="3" style={styles.empty}>
-                  Chưa có người dùng nào 📭
-                </td>
+                <td colSpan="3" className="empty">Chưa có người dùng nào 📭</td>
               </tr>
             )}
           </tbody>

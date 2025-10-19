@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import { useAuth } from "../../contexts/AuthContext";
+import AvatarUpload from "./AvatarUpload";
 import "../../App.css";
 
 function ProfilePage() {
@@ -102,6 +103,8 @@ function ProfilePage() {
             )}
           </div>
         </div>
+
+        <AvatarUpload currentAvatar={user.avatar} onUploaded={fetchProfile} />
 
         <form onSubmit={handleUpdate}>
           <div className="form-group">

@@ -21,7 +21,6 @@ function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const res = await api.get(`/profile`);
-      // backend returns the user object directly
       setUser(res.data.user || res.data);
       setLoading(false);
     } catch (err) {
@@ -39,14 +38,13 @@ function ProfilePage() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
-    // Nếu có nhập mật khẩu mới, kiểm tra xác nhận
     if (newPassword) {
       if (newPassword.length < 6) {
-        addToast('Mật khẩu mới phải có ít nhất 6 ký tự', 'warning');
+        addToast("Mật khẩu mới phải có ít nhất 6 ký tự", "warning");
         return;
       }
       if (newPassword !== confirmNewPassword) {
-        addToast('Mật khẩu xác nhận không khớp', 'warning');
+        addToast("Mật khẩu xác nhận không khớp", "warning");
         return;
       }
     }
@@ -56,32 +54,40 @@ function ProfilePage() {
       if (newPassword) payload.password = newPassword;
       await api.put("/profile", payload);
 
-      addToast('Cập nhật thông tin thành công', 'success');
+      addToast("Cập nhật thông tin thành công", "success");
       setNewPassword("");
       setConfirmNewPassword("");
       fetchProfile();
     } catch (err) {
       console.error("❌ Lỗi khi cập nhật:", err);
-      addToast(err.response?.data?.message || "Cập nhật thất bại", 'error');
+      addToast(err.response?.data?.message || "Cập nhật thất bại", "error");
     }
   };
 
-  // Xóa tài khoản (người dùng tự xóa)
+  // 🟥 Xóa tài khoản (người dùng tự xóa)
   const handleDeleteAccount = async () => {
-    const ok = window.confirm('Bạn có chắc muốn xóa tài khoản của mình? Hành động này không thể hoàn tác.');
+    const ok = window.confirm(
+      "Bạn có chắc muốn xóa tài khoản của mình? Hành động này không thể hoàn tác."
+    );
     if (!ok) return;
 
     try {
-      await api.delete('/profile');
-      addToast('Tài khoản đã được xóa', 'success');
-      // clear client state and redirect
+      await api.delete("/profile");
+      addToast("Tài khoản đã được xóa", "success");
       logout();
-      localStorage.removeItem('userId');
-      navigate('/');
+      localStorage.removeItem("userId");
+      navigate("/");
     } catch (err) {
-      console.error('❌ Lỗi khi xóa tài khoản:', err);
-      addToast(err.response?.data?.message || 'Xóa thất bại', 'error');
+      console.error("❌ Lỗi khi xóa tài khoản:", err);
+      addToast(err.response?.data?.message || "Xóa thất bại", "error");
     }
+  };
+
+  // 🚪 Đăng xuất tài khoản
+  const handleLogout = () => {
+    logout();
+    addToast("Đăng xuất thành công", "info");
+    navigate("/login");
   };
 
   if (loading) return <p className="loading">⏳ Đang tải thông tin...</p>;
@@ -89,18 +95,53 @@ function ProfilePage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+<div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <div>
             <h2 className="auth-title">👤 Thông tin cá nhân</h2>
             <p className="auth-sub">Quản lý thông tin cá nhân và mật khẩu</p>
           </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{fontSize:13,fontWeight:700,color:user.role === 'admin' ? '#991B1B' : '#0f172a'}}>
-              {user.role === 'admin' ? 'Admin' : 'Người dùng'}
+
+          <div style={{ textAlign: "right" }}>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: user.role === "admin" ? "#991B1B" : "#0f172a",
+              }}
+            >
+              {user.role === "admin" ? "Admin" : "Người dùng"}
             </div>
-            {user.role === 'admin' && (
-              <a href="/admin" style={{fontSize:12,color:'#4f46e5'}}>Đi tới trang quản trị</a>
+            {user.role === "admin" && (
+              <a
+                href="/admin"
+                style={{ fontSize: 12, color: "#4f46e5", display: "block" }}
+              >
+                Đi tới trang quản trị
+              </a>
             )}
+
+            {/* Nút đăng xuất */}
+            <button
+              onClick={handleLogout}
+              style={{
+                marginTop: 6,
+                background: "#e0233dff",
+                color: "white",
+                border: "none",
+                padding: "6px 10px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: 12,
+              }}
+            >
+              Đăng xuất
+            </button>
           </div>
         </div>
 
@@ -109,27 +150,64 @@ function ProfilePage() {
         <form onSubmit={handleUpdate}>
           <div className="form-group">
             <label>Họ và tên:</label>
-            <input type="text" value={user.name} onChange={(e) => setUser({ ...user, name: e.target.value })} required />
+            <input
+              type="text"
+              value={user.name}
+              onChange={(e) => setUser({ ...user, name: e.target.value })}
+              required
+            />
           </div>
 
           <div className="form-group">
             <label>Email:</label>
-            <input type="email" value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} required />
+            <input
+              type="email"
+              value={user.email}
+              onChange={(e) => setUser({ ...user, email: e.target.value })}
+              required
+            />
           </div>
 
           <div className="form-group">
             <label>Mật khẩu mới (tùy chọn):</label>
-            <input type="password" placeholder="Nhập mật khẩu mới nếu muốn đổi" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+            <input
+              type="password"
+              placeholder="Nhập mật khẩu mới nếu muốn đổi"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
           </div>
 
           <div className="form-group">
             <label>Xác nhận mật khẩu mới</label>
-            <input type="password" placeholder="Nhập lại mật khẩu mới" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} />
+            <input
+              type="password"
+              placeholder="Nhập lại mật khẩu mới"
+              value={confirmNewPassword}
+              onChange={(e) => setConfirmNewPassword(e.target.value)}
+            />
           </div>
 
-          <div className="center" style={{display:'flex',gap:12,justifyContent:'center',alignItems:'center'}}>
-            <button className="btn" type="submit">💾 Lưu thay đổi</button>
-            <button type="button" onClick={handleDeleteAccount} className="btn" style={{background:'#ef4444',borderColor:'#ef4444'}}>🗑️ Xóa tài khoản</button>
+          <div
+            className="center"
+            style={{
+              display: "flex",
+              gap: 12,
+justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <button className="btn" type="submit">
+              💾 Lưu thay đổi
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              className="btn"
+              style={{ background: "#ef4444", borderColor: "#ef4444" }}
+            >
+              🗑️ Xóa tài khoản
+            </button>
           </div>
         </form>
 

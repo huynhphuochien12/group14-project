@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api"; // axios có baseURL: http://localhost:5000/api
@@ -60,6 +60,9 @@ export default function LoginForm() {
           </div>
         </form>
 
+        <div style={{textAlign:'center', marginTop:12}}>
+          <Link to="/forgot-password" style={{fontSize:13,color:'#4f46e5'}}>Quên mật khẩu?</Link>
+        </div>
         {/* toasts handle messages */}
       </div>
     </div>

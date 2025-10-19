@@ -6,6 +6,8 @@ import { ToastProvider } from "./contexts/ToastContext";
 import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import ProfilePage from "./components/profile/ProfilePage";
+import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
+import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import AdminUserList from "./components/admin/AdminUserList";
 import HomePage from "./pages/HomePage";
@@ -20,8 +22,13 @@ function App() {
           {/* 🏠 Trang chính */}
           <Route path="/" element={<HomePage />} />
 
+
           {/* 🔐 Đăng nhập */}
           <Route path="/login" element={<LoginForm />} />
+
+          {/* 🔑 Quên mật khẩu */}
+          <Route path="/forgot-password" element={<ForgotPasswordForm />} />
+          <Route path="/reset-password" element={<ResetPasswordForm />} />
 
           {/* 📝 Đăng ký */}
           <Route path="/register" element={<RegisterForm />} />

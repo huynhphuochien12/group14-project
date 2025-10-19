@@ -3,6 +3,17 @@ const router = express.Router();
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const { protect } = require("../midlleware/authMiddleware");
+const multer = require('multer');
+const streamifier = require('streamifier');
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 // 🟢 Lấy thông tin cá nhân (GET /api/profile) - yêu cầu token
 router.get("/", protect, async (req, res) => {
@@ -49,4 +60,61 @@ router.delete("/", protect, async (req, res) => {
   }
 });
 
+// Upload avatar to Cloudinary
+router.post('/avatar', protect, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    // upload buffer to cloudinary
+    const streamUpload = (buffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ folder: 'avatars' }, (error, result) => {
+          if (result) resolve(result);
+          else reject(error);
+        });
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req.file.buffer);
+    const avatarUrl = result.secure_url;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.avatar = avatarUrl;
+    await user.save();
+    res.json({ message: 'Avatar uploaded', avatar: avatarUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Upload failed' });
+  }
+});
+
 module.exports = router;
+
+// Upload avatar to Cloudinary
+router.post('/avatar', protect, upload.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    // upload buffer to cloudinary
+    const streamUpload = (buffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream({ folder: 'avatars' }, (error, result) => {
+          if (result) resolve(result);
+          else reject(error);
+        });
+        streamifier.createReadStream(buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload(req.file.buffer);
+    const avatarUrl = result.secure_url;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.avatar = avatarUrl;
+    await user.save();
+    res.json({ message: 'Avatar uploaded', avatar: avatarUrl });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Upload failed' });
+  }
+});
+

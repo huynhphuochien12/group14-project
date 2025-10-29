@@ -16,14 +16,15 @@ export default function LoginForm() {
     try {
       // 🟢 Gọi API đăng nhập
       const res = await api.post("/auth/login", { email, password });
-      const { token, user } = res.data;
+  const { token, refreshToken, user } = res.data;
 
-      // ✅ Lưu token và userId vào localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", user._id || user.id);
+  // ✅ Lưu token(s) và userId vào localStorage
+  if (token) localStorage.setItem("token", token);
+  if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
+  localStorage.setItem("userId", user._id || user.id);
 
-      // Nếu dùng Context thì vẫn giữ lại
-      login(token, user);
+  // Nếu dùng Context thì vẫn giữ lại (login(jwt, refreshToken, user))
+  login(token, refreshToken, user);
 
       addToast("Đăng nhập thành công!", 'success');
       // Nếu là admin chuyển tới trang admin

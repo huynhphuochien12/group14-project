@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // import React, { useEffect, useState } from "react";
 // import api from "../../services/api";
 // import { useAuth } from "../../contexts/AuthContext";
@@ -143,6 +144,13 @@ import api from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 
+=======
+import React, { useEffect, useState } from "react";
+import api from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { useToast } from "../../contexts/ToastContext";
+
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
 export default function AdminUserList() {
   const { user: me, logout } = useAuth(); // ✅ Thêm logout
   const [users, setUsers] = useState([]);
@@ -238,7 +246,11 @@ export default function AdminUserList() {
               marginTop: 8,
               display: "flex",
               gap: 8,
+<<<<<<< HEAD
               justifyContent: "flex-end",
+=======
+justifyContent: "flex-end",
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
             }}
           >
             <a
@@ -326,7 +338,11 @@ export default function AdminUserList() {
                               {u.role === "admin" && (
                                 <span
                                   style={{
+<<<<<<< HEAD
                                     marginLeft: 6,
+=======
+marginLeft: 6,
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
                                     color: "#dc2626",
                                     fontSize: 12,
                                   }}

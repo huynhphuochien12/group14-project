@@ -239,7 +239,11 @@ function ProfilePage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
+<<<<<<< HEAD
         <div
+=======
+<div
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
           style={{
             display: "flex",
             alignItems: "center",
@@ -337,7 +341,11 @@ function ProfilePage() {
             style={{
               display: "flex",
               gap: 12,
+<<<<<<< HEAD
               justifyContent: "center",
+=======
+justifyContent: "center",
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
               alignItems: "center",
             }}
           >

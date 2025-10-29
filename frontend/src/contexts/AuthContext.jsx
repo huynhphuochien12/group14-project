@@ -34,7 +34,11 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [token]);
 
+<<<<<<< HEAD
   const login = (jwt, rToken, userData) => {
+=======
+  const login = (jwt, userData) => {
+>>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
     setToken(jwt);
     setRefreshToken(rToken);
     setUser(userData);

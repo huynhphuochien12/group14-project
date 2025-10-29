@@ -8,6 +8,9 @@ export const AuthProvider = ({ children }) => {
     JSON.parse(localStorage.getItem("user")) || null
   );
   const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [refreshToken, setRefreshToken] = useState(
+    localStorage.getItem("refreshToken") || ""
+  );
 
   // If there's a token but no user in context (e.g., page refresh), try to fetch profile
   useEffect(() => {
@@ -31,17 +34,29 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [token]);
 
-  const login = (jwt, userData) => {
+  const login = (jwt, rToken, userData) => {
     setToken(jwt);
+    setRefreshToken(rToken);
     setUser(userData);
     localStorage.setItem("token", jwt);
+    localStorage.setItem("refreshToken", rToken);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const logout = () => {
+    // Try to revoke refresh token on server
+    const rt = localStorage.getItem("refreshToken");
+    if (rt) {
+      try {
+        api.post("/auth/logout", { refreshToken: rt }).catch(() => {});
+      } catch (e) {}
+    }
+
     setToken("");
+    setRefreshToken("");
     setUser(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
     localStorage.removeItem("user");
     localStorage.removeItem("userId");
   };

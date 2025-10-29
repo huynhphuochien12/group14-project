@@ -9,6 +9,7 @@ const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
+const RefreshToken = require("../models/refreshTokenModel");
 
 // ==========================
 // ☁️ Cấu hình Cloudinary
@@ -76,16 +77,29 @@ router.post("/login", async (req, res) => {
       return res.status(500).json({ message: "Lỗi cấu hình máy chủ" });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+    // Create Access Token (short lived)
+    const accessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "15m",
     });
+
+    // Create Refresh Token (random string persisted in DB)
+    const refreshTokenString = crypto.randomBytes(64).toString("hex");
+    // expires in 7 days (configurable via ENV)
+    const refreshExpiresInDays = Number(process.env.REFRESH_TOKEN_DAYS) || 7;
+    const refreshTokenDoc = new RefreshToken({
+      user: user._id,
+      token: refreshTokenString,
+      expiresAt: new Date(Date.now() + refreshExpiresInDays * 24 * 60 * 60 * 1000),
+    });
+    await refreshTokenDoc.save();
 
     const userData = user.toObject();
     delete userData.password;
 
     res.json({
       message: "Đăng nhập thành công!",
-      token,
+      token: accessToken,
+      refreshToken: refreshTokenString,
       user: userData,
     });
   } catch (err) {
@@ -97,8 +111,68 @@ router.post("/login", async (req, res) => {
 // ==========================
 // 🚪 Logout
 // ==========================
-router.post("/logout", (req, res) => {
-  res.json({ message: "Đăng xuất thành công (xoá token ở frontend)" });
+// Logout: revoke refresh token if provided
+router.post("/logout", async (req, res) => {
+  const { refreshToken } = req.body;
+  try {
+    if (refreshToken) {
+      const doc = await RefreshToken.findOne({ token: refreshToken });
+      if (doc) {
+        doc.revoked = true;
+        await doc.save();
+      }
+    }
+
+    res.json({ message: "Đăng xuất thành công" });
+  } catch (err) {
+    console.error("❌ Lỗi logout:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+// Refresh access token
+router.post("/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(400).json({ message: "Thiếu refresh token" });
+
+  try {
+    const doc = await RefreshToken.findOne({ token: refreshToken }).populate("user");
+    if (!doc) return res.status(401).json({ message: "Refresh token không hợp lệ" });
+    if (doc.revoked) return res.status(401).json({ message: "Refresh token đã bị thu hồi" });
+    if (doc.expiresAt < new Date()) return res.status(401).json({ message: "Refresh token đã hết hạn" });
+
+    const user = doc.user;
+    if (!user) return res.status(401).json({ message: "Người dùng không tồn tại" });
+
+    // Issue new access token
+    const newAccessToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "15m",
+    });
+
+    // Optional: rotate refresh token (create new and revoke old)
+    const rotate = process.env.ROTATE_REFRESH_TOKENS === "true";
+    if (rotate) {
+      doc.revoked = true;
+      await doc.save();
+
+      const newRefreshString = crypto.randomBytes(64).toString("hex");
+      const refreshExpiresInDays = Number(process.env.REFRESH_TOKEN_DAYS) || 7;
+      const newDoc = new RefreshToken({
+        user: user._id,
+        token: newRefreshString,
+        expiresAt: new Date(Date.now() + refreshExpiresInDays * 24 * 60 * 60 * 1000),
+      });
+      await newDoc.save();
+
+      return res.json({ token: newAccessToken, refreshToken: newRefreshString });
+    }
+
+    // If not rotating, return new access token and same refresh token
+    res.json({ token: newAccessToken, refreshToken });
+  } catch (err) {
+    console.error("❌ Lỗi refresh token:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
 });
 
 // ==========================

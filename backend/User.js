@@ -1,31 +1,8 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true
-    },
-    password: {
-      type: String,
-      required: true
-    },
-    role: {
-      type: String,
-      enum: ['user', 'admin'],
-      default: 'user'
-    }
-  },
-  { timestamps: true } // tự động thêm createdAt và updatedAt
-);
+const userSchema = new mongoose.Schema({
+  name: String,
+  email: String
+});
 
-const User = mongoose.model('User', userSchema);
-
-export default User;
+module.exports = mongoose.model("User", userSchema);

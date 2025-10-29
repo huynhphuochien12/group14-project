@@ -9,6 +9,11 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
+  // If token exists but user not yet loaded, wait (could render spinner)
+  if (token && user === null) {
+    return null; // or a loading indicator
+  }
+
   if (requiredRole && user?.role !== requiredRole) {
     return <Navigate to="/" replace />;
   }

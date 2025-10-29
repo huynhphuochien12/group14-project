@@ -1,0 +1,88 @@
+const User = require('../models/userModel');
+
+// Get list of users (without passwords)
+const getUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    console.error('❌ Lỗi khi lấy danh sách user:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// Create new user (admin)
+const createUser = async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ message: 'Tên, email và mật khẩu là bắt buộc' });
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: 'Email đã tồn tại' });
+
+    const newUser = new User({ name, email, password, role: role || 'user' });
+    const savedUser = await newUser.save();
+    const userData = savedUser.toObject();
+    delete userData.password;
+    res.status(201).json(userData);
+  } catch (err) {
+    console.error('❌ Lỗi khi tạo user:', err);
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
+// Update user
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password, role } = req.body;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (typeof role !== 'undefined') user.role = role;
+    if (password) user.password = password;
+    await user.save();
+    const updated = user.toObject();
+    delete updated.password;
+    res.json({ message: 'Cập nhật thành công', user: updated });
+  } catch (err) {
+    console.error('❌ Lỗi khi cập nhật user:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// Delete user
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser) return res.status(404).json({ message: 'Không tìm thấy user' });
+    res.json({ message: 'Đã xóa user thành công' });
+  } catch (err) {
+    console.error('❌ Lỗi khi xóa user:', err);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+// Update avatar (Cloudinary)
+const updateAvatar = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'Không có file được tải lên' });
+    const imageUrl = (req.file && (req.file.path || req.file.secure_url)) || null;
+    if (!imageUrl) return res.status(500).json({ message: 'Không lấy được URL ảnh từ Cloudinary' });
+    if (req.user) await User.findByIdAndUpdate(req.user._id, { avatarUrl: imageUrl });
+    res.json({ message: 'Upload thành công!', url: imageUrl });
+  } catch (error) {
+    console.error('❌ Lỗi upload avatar:', error);
+    res.status(500).json({ message: 'Lỗi upload ảnh', error: error.message });
+  }
+};
+
+module.exports = {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  updateAvatar,
+};

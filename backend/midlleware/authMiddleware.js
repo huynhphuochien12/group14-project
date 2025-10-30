@@ -44,7 +44,7 @@ exports.protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // Tìm user tương ứng trong DB (không lấy password)
-    req.user = await User.findById(decoded.id).select("-password");
+    req.user = await User.findById(decoded.userId).select("-password");
     if (!req.user) {
       return res.status(404).json({ message: "Không tìm thấy người dùng" });
     }
@@ -82,4 +82,23 @@ exports.allowSelfOrAdmin = (req, res, next) => {
 
   // Còn lại → bị chặn
   res.status(403).json({ message: "Bạn chỉ có thể thao tác với tài khoản của chính mình" });
+};
+
+// ✅ Middleware: Kiểm tra role linh hoạt - Advanced RBAC
+exports.checkRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Chưa xác thực người dùng" });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: `Chỉ ${allowedRoles.join(", ")} mới được phép truy cập`,
+        yourRole: req.user.role 
+      });
+    }
+
+    console.log(`✅ Phân quyền thành công: ${req.user.email} (role=${req.user.role})`);
+    next();
+  };
 };

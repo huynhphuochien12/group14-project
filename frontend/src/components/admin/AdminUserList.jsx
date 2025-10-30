@@ -1,162 +1,14 @@
-<<<<<<< HEAD
-// import React, { useEffect, useState } from "react";
-// import api from "../../services/api";
-// import { useAuth } from "../../contexts/AuthContext";
-// import { useToast } from "../../contexts/ToastContext";
-
-// export default function AdminUserList() {
-//   const { user: me } = useAuth();
-//   const [users, setUsers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [editingId, setEditingId] = useState(null);
-//   const [editData, setEditData] = useState({ name: "", email: "" });
-//   const [query, setQuery] = useState("");
-
-//   const filtered = users.filter(u => {
-//     if (!query) return true;
-//     const q = query.toLowerCase();
-//     return (u.name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
-//   });
-
-//   const fetchUsers = async () => {
-//     try {
-//       const res = await api.get("/users");
-//       setUsers(res.data);
-//     } catch (err) {
-//       console.error("Failed to fetch users:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchUsers();
-//   }, []);
-//   const { addToast } = useToast();
-
-//   const handleDelete = async (id) => {
-//     if (!confirm("Bạn có chắc muốn xóa user này?")) return;
-//     try {
-//       await api.delete(`/users/${id}`);
-//       setUsers((s) => s.filter((u) => u._id !== id));
-//       addToast('Đã xóa user', 'success');
-//     } catch (err) {
-//       console.error(err);
-//       addToast(err.response?.data?.message || "Xóa thất bại", 'error');
-//     }
-//   };
-
-//   const startEdit = (u) => {
-//     setEditingId(u._id);
-//     setEditData({ name: u.name, email: u.email });
-//   };
-
-//   const cancelEdit = () => {
-//     setEditingId(null);
-//     setEditData({ name: "", email: "" });
-//   };
-
-//   const saveEdit = async (id) => {
-//     try {
-//       const res = await api.put(`/users/${id}`, editData);
-//       setUsers((s) => s.map((u) => (u._id === id ? res.data.user : u)));
-//       cancelEdit();
-//       addToast('Cập nhật thành công', 'success');
-//     } catch (err) {
-//       console.error(err);
-//       addToast(err.response?.data?.message || "Cập nhật thất bại", 'error');
-//     }
-//   };
-
-//   return (
-//     <div className="app-container">
-//       <div className="site-header">
-//         <h1 className="site-title">👑 Trang quản trị</h1>
-//         <div style={{ textAlign: "right" }}>
-//           <div style={{ fontSize: 14, fontWeight: 700 }}>{me?.name || "Admin"}</div>
-//           <div style={{ fontSize: 12, color: "#6b7280" }}>{me?.email}</div>
-//           <div style={{ marginTop: 8 }}>
-//             <a href="/admin/add" className="btn secondary" style={{ textDecoration: 'none', padding: '6px 10px' }}>➕ Thêm user</a>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div className="card">
-//         <div className="admin-toolbar">
-//           <h3>Danh sách người dùng</h3>
-//           <div className="admin-actions">
-//             <input className="search-input" placeholder="Tìm theo tên hoặc email" value={query} onChange={e => setQuery(e.target.value)} />
-//           </div>
-//         </div>
-
-//         {loading ? (
-//           <p className="muted">Đang tải...</p>
-//         ) : (
-//           <div className="table-responsive">
-//             <table className="user-table">
-//               <thead>
-//                 <tr>
-//                   <th style={{ width: 220 }}>ID</th>
-//                   <th>Tên</th>
-//                   <th>Email</th>
-//                   <th style={{ width: 220 }}>Hành động</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {filtered.map((u) => (
-//                   <tr key={u._id}>
-//                     <td style={{ wordBreak: "break-all" }}>{u._id}</td>
-//                     <td style={{ display: 'flex', alignItems: 'center' }}>
-//                       <div className="avatar">{(u.name || 'U').split(' ').map(s=>s[0]).slice(0,2).join('').toUpperCase()}</div>
-//                       <div>
-//                         <div style={{fontWeight:700}}>{u.name}</div>
-//                         <div style={{fontSize:12,color:'var(--muted)'}}>{u.role}</div>
-//                       </div>
-//                     </td>
-//                     <td>{u.email}</td>
-//                     <td>
-//                       {editingId === u._id ? (
-//                         <>
-//                           <button className="action-btn edit small" onClick={() => saveEdit(u._id)} style={{ marginRight: 8 }}>Lưu</button>
-//                           <button className="action-btn small" onClick={cancelEdit}>Hủy</button>
-//                         </>
-//                       ) : (
-//                         <>
-//                           <button className="action-btn edit small" onClick={() => startEdit(u)} style={{ marginRight: 8 }}>Sửa</button>
-//                           <button className="action-btn delete small" onClick={() => handleDelete(u._id)}>Xóa</button>
-//                         </>
-//                       )}
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 
-=======
-import React, { useEffect, useState } from "react";
-import api from "../../services/api";
-import { useAuth } from "../../contexts/AuthContext";
-import { useToast } from "../../contexts/ToastContext";
-
->>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
 export default function AdminUserList() {
-  const { user: me, logout } = useAuth(); // ✅ Thêm logout
+  const { user: me, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
-  const [editData, setEditData] = useState({ name: "", email: "" });
+  const [editData, setEditData] = useState({ name: "", email: "", role: "" });
   const [query, setQuery] = useState("");
   const { addToast } = useToast();
 
@@ -167,14 +19,14 @@ export default function AdminUserList() {
       const q = query.toLowerCase();
       return (
         (u.name || "").toLowerCase().includes(q) ||
-        (u.email || "").toLowerCase().includes(q)
+        (u.email || "").toLowerCase().includes(q) ||
+        (u.role || "").toLowerCase().includes(q)
       );
     })
     .sort((a, b) => {
-      // Admin lên trước
-      if (a.role === "admin" && b.role !== "admin") return -1;
-      if (a.role !== "admin" && b.role === "admin") return 1;
-      return 0;
+      // Admin lên trước, moderator thứ 2, user cuối
+      const roleOrder = { admin: 0, moderator: 1, user: 2 };
+      return (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3);
     });
 
   const fetchUsers = async () => {
@@ -183,6 +35,7 @@ export default function AdminUserList() {
       setUsers(res.data);
     } catch (err) {
       console.error("Failed to fetch users:", err);
+      addToast(err.response?.data?.message || "Không thể tải danh sách users", "error");
     } finally {
       setLoading(false);
     }
@@ -193,7 +46,8 @@ export default function AdminUserList() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm("Bạn có chắc muốn xóa user này?")) return;
+    if (!window.confirm("Bạn có chắc muốn xóa user này?")) return;
+
     try {
       await api.delete(`/users/${id}`);
       setUsers((s) => s.filter((u) => u._id !== id));
@@ -206,17 +60,23 @@ export default function AdminUserList() {
 
   const startEdit = (u) => {
     setEditingId(u._id);
-    setEditData({ name: u.name, email: u.email });
+    setEditData({ name: u.name, email: u.email, role: u.role });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditData({ name: "", email: "" });
+    setEditData({ name: "", email: "", role: "" });
   };
 
   const saveEdit = async (id) => {
     try {
-      const res = await api.put(`/users/${id}`, editData);
+      // Moderator không được gửi field role
+      const payload = { name: editData.name, email: editData.email };
+      if (me?.role === "admin") {
+        payload.role = editData.role;
+      }
+      
+      const res = await api.put(`/users/${id}`, payload);
       setUsers((s) => s.map((u) => (u._id === id ? res.data.user : u)));
       cancelEdit();
       addToast("Cập nhật thành công", "success");
@@ -229,39 +89,66 @@ export default function AdminUserList() {
   const handleLogout = () => {
     logout();
     addToast("Đã đăng xuất", "success");
+    window.location.href = "/login";
+  };
+
+  // 🎨 Badge role
+  const getRoleBadge = (role) => {
+    const badges = {
+      admin: { emoji: "👑", color: "#dc2626" },
+      moderator: { emoji: "🛡️", color: "#f59e0b" },
+      user: { emoji: "👤", color: "#6b7280" },
+    };
+    const badge = badges[role] || badges.user;
+    return (
+      <span
+        style={{
+          marginLeft: 6,
+          color: badge.color,
+          fontSize: 12,
+          fontWeight: 600,
+        }}
+      >
+        {badge.emoji}
+      </span>
+    );
   };
 
   return (
     <div className="app-container">
       {/* --- Header --- */}
       <div className="site-header">
-        <h1 className="site-title">👑 Trang quản trị</h1>
+        <h1 className="site-title">
+          {me?.role === "admin" ? "👑 Trang quản trị" : "🛡️ Trang quản lý"}
+        </h1>
         <div style={{ textAlign: "right" }}>
           <div style={{ fontSize: 14, fontWeight: 700 }}>
-            {me?.name || "Admin"}
+            {me?.name || "User"}
           </div>
           <div style={{ fontSize: 12, color: "#6b7280" }}>{me?.email}</div>
+          <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "capitalize" }}>
+            {me?.role}
+          </div>
           <div
             style={{
               marginTop: 8,
               display: "flex",
               gap: 8,
-<<<<<<< HEAD
               justifyContent: "flex-end",
-=======
-justifyContent: "flex-end",
->>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
             }}
           >
-            <a
-              href="/admin/add"
-              className="btn secondary"
-              style={{ textDecoration: "none", padding: "6px 10px" }}
-            >
-              ➕ Thêm user
-            </a>
+            {/* Chỉ admin mới thấy nút thêm user */}
+            {me?.role === "admin" && (
+              <a
+                href="/admin/add"
+                className="btn secondary"
+                style={{ textDecoration: "none", padding: "6px 10px" }}
+              >
+                ➕ Thêm user
+              </a>
+            )}
 
-            {/* ✅ Nút đăng xuất */}
+            {/* Nút đăng xuất */}
             <button
               className="btn danger"
               onClick={handleLogout}
@@ -283,11 +170,11 @@ justifyContent: "flex-end",
       {/* --- Nội dung bảng --- */}
       <div className="card">
         <div className="admin-toolbar">
-          <h3>Danh sách người dùng</h3>
+          <h3>Danh sách người dùng ({users.length})</h3>
           <div className="admin-actions">
             <input
               className="search-input"
-              placeholder="Tìm theo tên hoặc email"
+              placeholder="Tìm theo tên, email, hoặc role"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -296,6 +183,8 @@ justifyContent: "flex-end",
 
         {loading ? (
           <p className="muted">Đang tải...</p>
+        ) : filtered.length === 0 ? (
+          <p className="muted">Không tìm thấy user nào</p>
         ) : (
           <div className="table-responsive">
             <table className="user-table">
@@ -304,13 +193,16 @@ justifyContent: "flex-end",
                   <th style={{ width: 220 }}>ID</th>
                   <th>Tên</th>
                   <th>Email</th>
+                  <th>Role</th>
                   <th style={{ width: 220 }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((u) => (
                   <tr key={u._id}>
-                    <td style={{ wordBreak: "break-all" }}>{u._id}</td>
+                    <td style={{ wordBreak: "break-all", fontSize: 12 }}>
+                      {u._id}
+                    </td>
 
                     {/* --- Cột tên --- */}
                     <td>
@@ -321,6 +213,7 @@ justifyContent: "flex-end",
                           onChange={(e) =>
                             setEditData({ ...editData, name: e.target.value })
                           }
+                          style={{ width: "100%" }}
                         />
                       ) : (
                         <div style={{ display: "flex", alignItems: "center" }}>
@@ -335,26 +228,7 @@ justifyContent: "flex-end",
                           <div>
                             <div style={{ fontWeight: 700 }}>
                               {u.name}
-                              {u.role === "admin" && (
-                                <span
-                                  style={{
-<<<<<<< HEAD
-                                    marginLeft: 6,
-=======
-marginLeft: 6,
->>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
-                                    color: "#dc2626",
-                                    fontSize: 12,
-                                  }}
-                                >
-                                  👑
-                                </span>
-                              )}
-                            </div>
-                            <div
-                              style={{ fontSize: 12, color: "var(--muted)" }}
-                            >
-                              {u.role}
+                              {getRoleBadge(u.role)}
                             </div>
                           </div>
                         </div>
@@ -365,14 +239,47 @@ marginLeft: 6,
                     <td>
                       {editingId === u._id ? (
                         <input
-                          type="text"
+                          type="email"
                           value={editData.email}
                           onChange={(e) =>
                             setEditData({ ...editData, email: e.target.value })
                           }
+                          style={{ width: "100%" }}
                         />
                       ) : (
                         u.email
+                      )}
+                    </td>
+
+                    {/* --- Cột role --- */}
+                    <td>
+                      {editingId === u._id && me?.role === "admin" ? (
+                        <select
+                          value={editData.role}
+                          onChange={(e) =>
+                            setEditData({ ...editData, role: e.target.value })
+                          }
+                          style={{ width: "100%", padding: "4px" }}
+                        >
+                          <option value="user">User</option>
+                          <option value="moderator">Moderator</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      ) : (
+                        <span
+                          style={{
+                            textTransform: "capitalize",
+                            fontWeight: 600,
+                            color:
+                              u.role === "admin"
+                                ? "#dc2626"
+                                : u.role === "moderator"
+                                ? "#f59e0b"
+                                : "#6b7280",
+                          }}
+                        >
+                          {u.role}
+                        </span>
                       )}
                     </td>
 
@@ -403,12 +310,15 @@ marginLeft: 6,
                           >
                             Sửa
                           </button>
-                          <button
-                            className="action-btn delete small"
-                            onClick={() => handleDelete(u._id)}
-                          >
-                            Xóa
-                          </button>
+                          {/* Chỉ admin mới thấy nút xóa */}
+                          {me?.role === "admin" && (
+                            <button
+                              className="action-btn delete small"
+                              onClick={() => handleDelete(u._id)}
+                            >
+                              Xóa
+                            </button>
+                          )}
                         </>
                       )}
                     </td>

@@ -43,15 +43,17 @@ function App() {
             }
           />
 
-          {/* ⚙️ Quản trị (chỉ dành cho admin) */}
+          {/* ⚙️ Quản trị (Admin & Moderator) */}
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
                 <AdminUserList />
               </ProtectedRoute>
             }
           />
+          
+          {/* ➕ Thêm user (chỉ Admin) */}
           <Route
             path="/admin/add"
             element={

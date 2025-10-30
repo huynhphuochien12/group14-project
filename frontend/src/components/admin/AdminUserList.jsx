@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
-import { useAuth } from "../../contexts/AuthContext";
+import { useSelector, useDispatch } from "react-redux";
+import { selectUser } from "../../store/slices/authSlice";
+import { logout as logoutThunk } from "../../store/slices/authSlice";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function AdminUserList() {
-  const { user: me, logout } = useAuth();
+  const dispatch = useDispatch();
+  const me = useSelector(selectUser);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
@@ -87,7 +90,7 @@ export default function AdminUserList() {
   };
 
   const handleLogout = () => {
-    logout();
+    dispatch(logoutThunk());
     addToast("Đã đăng xuất", "success");
     window.location.href = "/login";
   };

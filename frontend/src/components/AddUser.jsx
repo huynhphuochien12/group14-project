@@ -52,6 +52,7 @@ function AddUser() {
             <label>Quyền</label>
             <select value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="user">User</option>
+              <option value="moderator">Moderator</option>
               <option value="admin">Admin</option>
             </select>
           </div>

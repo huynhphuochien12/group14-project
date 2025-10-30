@@ -239,11 +239,7 @@ function ProfilePage() {
   return (
     <div className="auth-wrap">
       <div className="auth-card">
-<<<<<<< HEAD
         <div
-=======
-<div
->>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
           style={{
             display: "flex",
             alignItems: "center",
@@ -260,17 +256,20 @@ function ProfilePage() {
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: user.role === "admin" ? "#991B1B" : "#0f172a",
+                textTransform: "capitalize",
+                color: user.role === "admin" ? "#991B1B" : user.role === "moderator" ? "#f59e0b" : "#0f172a",
               }}
             >
-              {user.role === "admin" ? "Admin" : "Người dùng"}
+              {user.role === "admin" && "👑 Admin"}
+              {user.role === "moderator" && "🛡️ Moderator"}
+              {user.role === "user" && "👤 Người dùng"}
             </div>
-            {user.role === "admin" && (
+            {(user.role === "admin" || user.role === "moderator") && (
               <a
                 href="/admin"
                 style={{ fontSize: 12, color: "#4f46e5", display: "block" }}
               >
-                Đi tới trang quản trị
+                Đi tới trang quản lý
               </a>
             )}
 
@@ -341,11 +340,7 @@ function ProfilePage() {
             style={{
               display: "flex",
               gap: 12,
-<<<<<<< HEAD
               justifyContent: "center",
-=======
-justifyContent: "center",
->>>>>>> ce8b15b65b3aa3e65ac046be144aff8054f90225
               alignItems: "center",
             }}
           >

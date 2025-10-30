@@ -1,13 +1,43 @@
 
 const User = require("../models/userModel");
 
-// 📦 Lấy danh sách người dùng
+// 📦 Lấy danh sách người dùng (Admin, Moderator)
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password");
+    
+    console.log("📊 TRƯỚC KHI SẮP XẾP:");
+    users.forEach(u => console.log(`  - ${u.name}: role="${u.role}"`));
+    
+    // Sắp xếp: Admin → Moderator → User
+    users.sort((a, b) => {
+      const roleOrder = { admin: 0, moderator: 1, user: 2 };
+      return (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3);
+    });
+    
+    console.log("📊 SAU KHI SẮP XẾP:");
+    users.forEach(u => console.log(`  - ${u.name}: role="${u.role}"`));
+    
     res.json(users);
   } catch (err) {
     console.error("❌ Lỗi khi lấy danh sách user:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+// 📘 Lấy thông tin một user theo ID (Admin, Moderator)
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("-password");
+    
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy user" });
+    }
+    
+    res.json(user);
+  } catch (err) {
+    console.error("❌ Lỗi khi lấy thông tin user:", err);
     res.status(500).json({ message: "Lỗi server" });
   }
 };
@@ -35,26 +65,46 @@ const createUser = async (req, res) => {
   }
 };
 
-// ✏️ Cập nhật thông tin người dùng
+// ✏️ Cập nhật thông tin người dùng (Admin, Moderator)
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email } = req.body;
+    const { name, email, role, password } = req.body;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { name, email },
-      { new: true }
-    );
-
-    if (!updatedUser) {
+    const user = await User.findById(id);
+    if (!user) {
       return res.status(404).json({ message: "Không tìm thấy user" });
     }
 
-    res.json(updatedUser);
+    // Cập nhật thông tin
+    if (name) user.name = name;
+    if (email) user.email = email;
+    
+    // Chỉ admin mới được đổi role
+    if (role) {
+      if (req.user.role === "admin") {
+        user.role = role;
+      } else {
+        return res.status(403).json({ 
+          message: "Chỉ admin mới có quyền thay đổi role" 
+        });
+      }
+    }
+    
+    if (password) user.password = password; // Pre-save hook sẽ hash
+
+    await user.save();
+    
+    const userData = user.toObject();
+    delete userData.password;
+    
+    res.json({ message: "Cập nhật user thành công", user: userData });
   } catch (err) {
     console.error("❌ Lỗi khi cập nhật user:", err);
-    res.status(500).json({ message: "Lỗi server" });
+    if (err.code === 11000) {
+      return res.status(400).json({ message: "Email đã tồn tại" });
+    }
+    res.status(500).json({ message: "Lỗi server", error: err.message });
   }
 };
 
@@ -81,10 +131,45 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// 🔄 Cập nhật role của user (Admin only)
+const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+
+    if (!role || !["user", "admin", "moderator"].includes(role)) {
+      return res.status(400).json({ 
+        message: "Role không hợp lệ. Chỉ chấp nhận: user, admin, moderator" 
+      });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Không tìm thấy user" });
+    }
+
+    user.role = role;
+    await user.save();
+
+    const userData = user.toObject();
+    delete userData.password;
+
+    res.json({ 
+      message: `Đã cập nhật role của ${user.name} thành ${role}`, 
+      user: userData 
+    });
+  } catch (err) {
+    console.error("❌ Lỗi khi cập nhật role:", err);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
 module.exports = {
   getUsers,
+  getUserById,
   createUser,
   updateUser,
+  updateUserRole,
   deleteUser,
 };
 

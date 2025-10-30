@@ -259,3 +259,4 @@ checkRole(...allowedRoles) // Rest parameters
 *Ngày: 2025-10-30*  
 *Task: Sửa lỗi + Hoàn thiện RBAC*
 
+

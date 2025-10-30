@@ -11,6 +11,13 @@ const nodemailer = require("nodemailer");
 const cloudinary = require("cloudinary").v2;
 const streamifier = require("streamifier");
 
+// Import logging & rate limiting middleware
+const { logActivity, createLog } = require("../middleware/logMiddleware");
+const {
+  loginLimiter,
+  forgotPasswordLimiter,
+} = require("../middleware/rateLimitMiddleware");
+
 // ==========================
 // ☁️ Cấu hình Cloudinary
 // ==========================
@@ -23,12 +30,27 @@ cloudinary.config({
 // ==========================
 // 📌 Đăng ký tài khoản
 // ==========================
-router.post("/register", async (req, res) => {
+router.post("/register", logActivity("REGISTER"), async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      // Log failed registration
+      await createLog({
+        userName: name,
+        userEmail: email,
+        action: "REGISTER_FAILED",
+        method: "POST",
+        endpoint: "/api/auth/register",
+        statusCode: 400,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get("user-agent"),
+        metadata: { reason: "Email already exists" },
+        success: false,
+        errorMessage: "Email đã được sử dụng",
+      });
+
       return res.status(400).json({ message: "Email đã được sử dụng" });
     }
 
@@ -44,6 +66,21 @@ router.post("/register", async (req, res) => {
     const userData = newUser.toObject();
     delete userData.password;
 
+    // Log successful registration
+    await createLog({
+      userId: newUser._id,
+      userName: newUser.name,
+      userEmail: newUser.email,
+      action: "REGISTER_SUCCESS",
+      method: "POST",
+      endpoint: "/api/auth/register",
+      statusCode: 201,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get("user-agent"),
+      metadata: { role: newUser.role },
+      success: true,
+    });
+
     res.status(201).json({
       message: "Đăng ký thành công!",
       user: userData,
@@ -57,57 +94,114 @@ router.post("/register", async (req, res) => {
 // ==========================
 // 🔐 Đăng nhập
 // ==========================
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+router.post(
+  "/login",
+  loginLimiter, // Rate limiting - max 5 attempts per 15 min
+  logActivity("LOGIN"),
+  async (req, res) => {
+    const { email, password } = req.body;
 
-  try {
-    const user = await User.findOne({ email });
-    console.log("Login attempt for email:", email);
-    if (!user) {
-      return res.status(400).json({ message: "Email không tồn tại" });
+    try {
+      const user = await User.findOne({ email });
+      console.log("Login attempt for email:", email);
+
+      if (!user) {
+        // Log failed login - user not found
+        await createLog({
+          userEmail: email,
+          action: "LOGIN_FAILED",
+          method: "POST",
+          endpoint: "/api/auth/login",
+          statusCode: 400,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get("user-agent"),
+          metadata: { reason: "User not found", email },
+          success: false,
+          errorMessage: "Email không tồn tại",
+        });
+
+        return res.status(400).json({ message: "Email không tồn tại" });
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        // Log failed login - wrong password
+        await createLog({
+          userId: user._id,
+          userName: user.name,
+          userEmail: user.email,
+          action: "LOGIN_FAILED",
+          method: "POST",
+          endpoint: "/api/auth/login",
+          statusCode: 400,
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get("user-agent"),
+          metadata: { reason: "Wrong password", email },
+          success: false,
+          errorMessage: "Sai mật khẩu",
+        });
+
+        return res.status(400).json({ message: "Sai mật khẩu" });
+      }
+
+      if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+        console.error(
+          "❌ Thiếu JWT_SECRET hoặc JWT_REFRESH_SECRET trong .env"
+        );
+        return res.status(500).json({ message: "Lỗi cấu hình máy chủ" });
+      }
+
+      // ✅ Tạo Access Token & Refresh Token
+      const accessToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "15m",
+        }
+      );
+
+      const refreshToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_REFRESH_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // ✅ Lưu Refresh Token vào DB
+      await RefreshToken.create({
+        userId: user._id,
+        token: refreshToken,
+      });
+
+      const userData = user.toObject();
+      delete userData.password;
+
+      // Log successful login
+      await createLog({
+        userId: user._id,
+        userName: user.name,
+        userEmail: user.email,
+        action: "LOGIN_SUCCESS",
+        method: "POST",
+        endpoint: "/api/auth/login",
+        statusCode: 200,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get("user-agent"),
+        metadata: { role: user.role },
+        success: true,
+      });
+
+      res.json({
+        message: "Đăng nhập thành công!",
+        accessToken,
+        refreshToken,
+        user: userData,
+      });
+    } catch (err) {
+      console.error("❌ Lỗi đăng nhập:", err.message);
+      res.status(500).json({ message: "Lỗi server" });
     }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Sai mật khẩu" });
-    }
-
-    if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
-      console.error("❌ Thiếu JWT_SECRET hoặc JWT_REFRESH_SECRET trong .env");
-      return res.status(500).json({ message: "Lỗi cấu hình máy chủ" });
-    }
-
-    // ✅ Tạo Access Token & Refresh Token
-    const accessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "15m",
-    });
-
-    const refreshToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    // ✅ Lưu Refresh Token vào DB
-    await RefreshToken.create({
-      userId: user._id,
-      token: refreshToken,
-    });
-
-    const userData = user.toObject();
-    delete userData.password;
-
-    res.json({
-      message: "Đăng nhập thành công!",
-      accessToken,
-      refreshToken,
-      user: userData,
-    });
-  } catch (err) {
-    console.error("❌ Lỗi đăng nhập:", err.message);
-    res.status(500).json({ message: "Lỗi server" });
   }
-});
+);
 
 // ==========================
 // ♻️ Refresh Access Token
@@ -153,7 +247,11 @@ router.post("/logout", async (req, res) => {
 // ==========================
 // 🔁 Quên mật khẩu - gửi token reset
 // ==========================
-router.post("/forgot-password", async (req, res) => {
+router.post(
+  "/forgot-password",
+  forgotPasswordLimiter, // Rate limiting - max 3 per hour
+  logActivity("FORGOT_PASSWORD"),
+  async (req, res) => {
   const { email } = req.body;
   
   if (!email) {

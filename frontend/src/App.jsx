@@ -10,6 +10,7 @@ import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import AdminUserList from "./components/admin/AdminUserList";
+import AdminLogs from "./components/admin/AdminLogs";
 import HomePage from "./pages/HomePage";
 import AddUser from "./components/AddUser";
 
@@ -59,6 +60,16 @@ function App() {
             element={
               <ProtectedRoute requiredRole="admin">
                 <AddUser />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 📊 User Activity Logs (chỉ Admin) */}
+          <Route
+            path="/admin/logs"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLogs />
               </ProtectedRoute>
             }
           />

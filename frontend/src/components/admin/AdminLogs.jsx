@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
-import { useAuth } from "../../contexts/AuthContext";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../store/slices/authSlice";
 import "../../App.css";
 
 export default function AdminLogs() {
@@ -17,7 +18,7 @@ export default function AdminLogs() {
     endDate: "",
   });
   const { addToast } = useToast();
-  const { user } = useAuth();
+  const user = useSelector(selectUser);
 
   useEffect(() => {
     if (user?.role !== "admin") {

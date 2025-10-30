@@ -146,7 +146,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
-import { useAuth } from "../../contexts/AuthContext";
+import { useDispatch } from "react-redux";
+import { logout as logoutThunk } from "../../store/slices/authSlice";
 import AvatarUpload from "./AvatarUpload";
 import "../../App.css";
 
@@ -158,7 +159,7 @@ function ProfilePage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const dispatch = useDispatch();
   const { addToast } = useToast();
 
   // 🟢 Lấy thông tin người dùng hiện tại
@@ -218,7 +219,7 @@ function ProfilePage() {
     try {
       await api.delete("/profile");
       addToast("Tài khoản đã được xóa", "success");
-      logout();
+      dispatch(logoutThunk());
       localStorage.removeItem("userId");
       navigate("/");
     } catch (err) {
@@ -229,7 +230,7 @@ function ProfilePage() {
 
   // 🚪 Đăng xuất tài khoản
   const handleLogout = () => {
-    logout();
+    dispatch(logoutThunk());
     addToast("Đăng xuất thành công", "info");
     navigate("/login");
   };

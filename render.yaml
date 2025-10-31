@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: group14-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Thêm các biến môi trường khác trong Render Dashboard
+      # Không nên hardcode secrets ở đây
+

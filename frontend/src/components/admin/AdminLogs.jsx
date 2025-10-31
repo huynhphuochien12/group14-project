@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import { useSelector } from "react-redux";
@@ -6,6 +7,7 @@ import { selectUser } from "../../store/slices/authSlice";
 import "../../App.css";
 
 export default function AdminLogs() {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,16 +97,16 @@ export default function AdminLogs() {
 
   const getActionBadge = (action) => {
     const badges = {
-      LOGIN_SUCCESS: { color: "#10b981", text: "✅ Login" },
-      LOGIN_FAILED: { color: "#ef4444", text: "❌ Login Failed" },
-      REGISTER_SUCCESS: { color: "#3b82f6", text: "📝 Register" },
-      REGISTER_FAILED: { color: "#f59e0b", text: "⚠️ Register Failed" },
-      LOGOUT: { color: "#6b7280", text: "🚪 Logout" },
-      FORGOT_PASSWORD: { color: "#8b5cf6", text: "🔐 Forgot Password" },
-      LOGIN_RATE_LIMITED: { color: "#dc2626", text: "🚫 Rate Limited" },
-      VIEW_LOGS: { color: "#06b6d4", text: "👁️ View Logs" },
-      UPDATE_PROFILE: { color: "#14b8a6", text: "✏️ Update Profile" },
-      UPLOAD_AVATAR: { color: "#f97316", text: "📸 Upload Avatar" },
+      LOGIN_SUCCESS: { color: "#10b981", text: "LOGIN" },
+      LOGIN_FAILED: { color: "#ef4444", text: "X Login Failed" },
+      REGISTER_SUCCESS: { color: "#3b82f6", text: "REGISTER" },
+      REGISTER_FAILED: { color: "#f59e0b", text: "X Register Failed" },
+      LOGOUT: { color: "#6b7280", text: "LOGOUT" },
+      FORGOT_PASSWORD: { color: "#8b5cf6", text: "FORGOT PASSWORD" },
+      LOGIN_RATE_LIMITED: { color: "#dc2626", text: "X Rate Limited" },
+      VIEW_LOGS: { color: "#06b6d4", text: "VIEW LOGS" },
+      UPDATE_PROFILE: { color: "#14b8a6", text: "UPDATE PROFILE" },
+      UPLOAD_AVATAR: { color: "#f97316", text: "UPLOAD AVATAR" },
     };
 
     const badge = badges[action] || { color: "#9ca3af", text: action };
@@ -128,7 +130,13 @@ export default function AdminLogs() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleString("vi-VN");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
   };
 
   if (user?.role !== "admin") {
@@ -144,7 +152,16 @@ export default function AdminLogs() {
     <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
       <div style={styles.header}>
         <div>
-          <h2 style={{ margin: 0 }}>📊 User Activity Logs</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button
+              className="btn secondary"
+              onClick={() => navigate("/admin")}
+              style={{ fontSize: "13px", padding: "6px 12px" }}
+            >
+              ← Quay lại
+            </button>
+            <h2 style={{ margin: 0 }}>📊 User Activity Logs</h2>
+          </div>
           <p style={{ margin: "8px 0 0 0", color: "#6b7280", fontSize: "14px" }}>
             Theo dõi hoạt động và bảo mật hệ thống
           </p>
@@ -311,17 +328,30 @@ export default function AdminLogs() {
                     </td>
                     <td style={styles.td}>
                       {log.errorMessage && (
-                        <div style={{ fontSize: "12px", color: "#dc2626" }}>
+                        <div style={{ fontSize: "12px", color: "#dc2626", marginBottom: "4px" }}>
                           {log.errorMessage}
                         </div>
                       )}
                       {log.metadata && Object.keys(log.metadata).length > 0 && (
                         <details style={{ fontSize: "12px" }}>
-                          <summary style={{ cursor: "pointer" }}>Metadata</summary>
-                          <pre style={{ margin: "4px 0", fontSize: "11px" }}>
+                          <summary style={{ cursor: "pointer", color: "#6b7280" }}>
+                            ► Metadata
+                          </summary>
+                          <pre style={{ 
+                            margin: "8px 0 0 0", 
+                            fontSize: "11px", 
+                            background: "#f9fafb",
+                            padding: "8px",
+                            borderRadius: "4px",
+                            overflow: "auto",
+                            maxHeight: "200px"
+                          }}>
                             {JSON.stringify(log.metadata, null, 2)}
                           </pre>
                         </details>
+                      )}
+                      {!log.errorMessage && (!log.metadata || Object.keys(log.metadata).length === 0) && (
+                        <span style={{ color: "#9ca3af", fontSize: "12px" }}>-</span>
                       )}
                     </td>
                   </tr>

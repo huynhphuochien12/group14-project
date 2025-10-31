@@ -38,7 +38,7 @@ function AppRedux() {
           <Route path="/reset-password" element={<ResetPasswordForm />} />
 
           {/* 📝 Đăng ký */}
-          <Route path="/register" element={<RegisterFormRedux />} />
+          <Route path="/signup" element={<RegisterFormRedux />} />
 
           {/* 👤 Hồ sơ cá nhân - Protected */}
           <Route

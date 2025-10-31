@@ -30,7 +30,8 @@ cloudinary.config({
 // ==========================
 // 📌 Đăng ký tài khoản
 // ==========================
-router.post("/register", logActivity("REGISTER"), async (req, res) => {
+// Function chung cho register/signup
+const handleRegister = async (req, res, endpointPath = "/api/auth/register") => {
   const { name, email, password } = req.body;
 
   try {
@@ -42,7 +43,7 @@ router.post("/register", logActivity("REGISTER"), async (req, res) => {
         userEmail: email,
         action: "REGISTER_FAILED",
         method: "POST",
-        endpoint: "/api/auth/register",
+        endpoint: endpointPath,
         statusCode: 400,
         ipAddress: req.ip || req.connection.remoteAddress,
         userAgent: req.get("user-agent"),
@@ -73,7 +74,7 @@ router.post("/register", logActivity("REGISTER"), async (req, res) => {
       userEmail: newUser.email,
       action: "REGISTER_SUCCESS",
       method: "POST",
-      endpoint: "/api/auth/register",
+      endpoint: endpointPath,
       statusCode: 201,
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.get("user-agent"),
@@ -89,6 +90,16 @@ router.post("/register", logActivity("REGISTER"), async (req, res) => {
     console.error("❌ Lỗi đăng ký:", err.message);
     res.status(500).json({ message: "Lỗi server" });
   }
+};
+
+// Route /register
+router.post("/register", logActivity("REGISTER"), async (req, res) => {
+  await handleRegister(req, res, "/api/auth/register");
+});
+
+// Route /signup (alias cho /register)
+router.post("/signup", logActivity("REGISTER"), async (req, res) => {
+  await handleRegister(req, res, "/api/auth/signup");
 });
 
 // ==========================
@@ -227,7 +238,23 @@ router.post("/refresh", async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    res.json({ accessToken: newAccessToken });
+    // Tạo refresh token mới (optional - rotate token)
+    const newRefreshToken = jwt.sign(
+      { userId: decoded.userId },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // Cập nhật refresh token trong DB
+    storedToken.token = newRefreshToken;
+    await storedToken.save();
+
+    // Response format giống ảnh Postman
+    res.json({
+      message: "Refresh token thành công",
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
   } catch (err) {
     res.status(403).json({ message: "Refresh token hết hạn hoặc sai" });
   }
@@ -358,7 +385,10 @@ router.post(
 
         console.log(`✅ Reset password email sent to: ${email}`);
         return res.json({ 
-          message: "Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn." 
+          message: "Email đặt lại mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư của bạn.",
+          // Trả về token để test (development mode)
+          resetToken: resetToken,
+          resetUrl: resetUrl
         });
       } catch (emailError) {
         console.error("❌ Lỗi gửi email:", emailError);
@@ -389,15 +419,21 @@ router.post(
 // 🔐 Reset mật khẩu bằng token
 // ==========================
 router.post("/reset-password", async (req, res) => {
-  const { token, password } = req.body;
+  // Hỗ trợ cả 'password' và 'newPassword'
+  const { token, password, newPassword } = req.body;
+  const finalPassword = password || newPassword;
   
   // Validation
-  if (!token || !password) {
+  if (!token || !finalPassword) {
     return res.status(400).json({ message: "Thiếu token hoặc mật khẩu mới" });
   }
 
-  if (password.length < 6) {
-    return res.status(400).json({ message: "Mật khẩu phải có ít nhất 6 ký tự" });
+  if (finalPassword.length < 6) {
+    return res.status(400).json({ 
+      message: "Mật khẩu phải có ít nhất 6 ký tự",
+      minLength: 6,
+      currentLength: finalPassword.length
+    });
   }
 
   try {
@@ -420,7 +456,7 @@ router.post("/reset-password", async (req, res) => {
     console.log(`🔐 Resetting password for user: ${user.email}`);
 
     // Cập nhật mật khẩu mới (sẽ tự động hash bởi pre-save hook)
-    user.password = password;
+    user.password = finalPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 

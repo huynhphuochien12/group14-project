@@ -112,7 +112,7 @@ export default function LoginFormRedux() {
 
         <div style={{textAlign:'center', marginTop:12}}>
           <span style={{fontSize:13,color:'#6b7280'}}>Chưa có tài khoản? </span>
-          <Link to="/register" style={{fontSize:13,color:'#4f46e5'}}>
+          <Link to="/signup" style={{fontSize:13,color:'#4f46e5'}}>
             Đăng ký ngay
           </Link>
         </div>

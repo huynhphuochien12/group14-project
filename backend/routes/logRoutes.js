@@ -49,11 +49,20 @@ router.get(
         .populate("userId", "name email role")
         .lean();
 
+      // Map logs để format giống ảnh Postman (ipAddress -> ip)
+      const formattedLogs = logs.map(log => ({
+        ...log,
+        ip: log.ipAddress || null, // Thêm field ip (alias của ipAddress)
+        // Giữ nguyên ipAddress để backward compatibility
+      }));
+
       // Get total count
       const total = await Log.countDocuments(filter);
 
       res.json({
-        logs,
+        success: true,
+        count: formattedLogs.length,
+        logs: formattedLogs,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useSelector, useDispatch } from "react-redux";
 import { selectUser } from "../../store/slices/authSlice";
@@ -6,6 +7,7 @@ import { logout as logoutThunk } from "../../store/slices/authSlice";
 import { useToast } from "../../contexts/ToastContext";
 
 export default function AdminUserList() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const me = useSelector(selectUser);
   const [users, setUsers] = useState([]);
@@ -27,9 +29,14 @@ export default function AdminUserList() {
       );
     })
     .sort((a, b) => {
-      // Admin lên trước, moderator thứ 2, user cuối
+      // Admin lên trước, moderator thứ 2, user cuối (không phân biệt hoa/thường)
       const roleOrder = { admin: 0, moderator: 1, user: 2 };
-      return (roleOrder[a.role] || 3) - (roleOrder[b.role] || 3);
+      const ar = (a.role || "").toLowerCase();
+      const br = (b.role || "").toLowerCase();
+      const diff = (roleOrder[ar] ?? 3) - (roleOrder[br] ?? 3);
+      if (diff !== 0) return diff;
+      // phụ: sắp xếp theo tên để ổn định
+      return (a.name || "").localeCompare(b.name || "");
     });
 
   const fetchUsers = async () => {
@@ -73,6 +80,26 @@ export default function AdminUserList() {
 
   const saveEdit = async (id) => {
     try {
+      // Lấy user hiện tại để so sánh
+      const currentUser = users.find(u => u._id === id);
+      if (!currentUser) {
+        addToast("Không tìm thấy user để cập nhật", "error");
+        return;
+      }
+
+      // Kiểm tra xem có thay đổi gì không
+      const nameChanged = editData.name !== currentUser.name;
+      const emailChanged = editData.email !== currentUser.email;
+      const roleChanged = me?.role === "admin" && editData.role !== currentUser.role;
+      
+      const hasChanges = nameChanged || emailChanged || roleChanged;
+      
+      if (!hasChanges) {
+        addToast("Không có thay đổi nào để lưu", "info");
+        cancelEdit();
+        return;
+      }
+
       // Moderator không được gửi field role
       const payload = { name: editData.name, email: editData.email };
       if (me?.role === "admin") {
@@ -82,7 +109,18 @@ export default function AdminUserList() {
       const res = await api.put(`/users/${id}`, payload);
       setUsers((s) => s.map((u) => (u._id === id ? res.data.user : u)));
       cancelEdit();
-      addToast("Cập nhật thành công", "success");
+      
+      // Thông báo chi tiết về những gì đã thay đổi
+      const changedFields = [];
+      if (nameChanged) changedFields.push("tên");
+      if (emailChanged) changedFields.push("email");
+      if (roleChanged) changedFields.push("quyền");
+      
+      const message = changedFields.length > 0
+        ? `✅ Cập nhật ${changedFields.join(", ")} của user thành công!`
+        : "✅ Cập nhật user thành công!";
+      
+      addToast(message, "success");
     } catch (err) {
       console.error(err);
       addToast(err.response?.data?.message || "Cập nhật thất bại", "error");
@@ -140,15 +178,33 @@ export default function AdminUserList() {
               justifyContent: "flex-end",
             }}
           >
+            {/* Nút xem profile */}
+            <button
+              className="btn secondary"
+              onClick={() => navigate("/profile")}
+              style={{ padding: "6px 10px" }}
+            >
+              👤 Xem Profile
+            </button>
+
             {/* Chỉ admin mới thấy nút thêm user */}
             {me?.role === "admin" && (
-              <a
-                href="/admin/add"
-                className="btn secondary"
-                style={{ textDecoration: "none", padding: "6px 10px" }}
-              >
-                ➕ Thêm user
-              </a>
+              <>
+                <a
+                  href="/admin/add"
+                  className="btn secondary"
+                  style={{ textDecoration: "none", padding: "6px 10px" }}
+                >
+                  ➕ Thêm user
+                </a>
+                <button
+                  className="btn secondary"
+                  onClick={() => navigate("/admin/logs")}
+                  style={{ padding: "6px 10px" }}
+                >
+                  📊 Xem Logs
+                </button>
+              </>
             )}
 
             {/* Nút đăng xuất */}

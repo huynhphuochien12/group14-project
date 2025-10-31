@@ -153,6 +153,7 @@ import "../../App.css";
 
 function ProfilePage() {
   const [user, setUser] = useState({ name: "", email: "" });
+  const [originalUser, setOriginalUser] = useState({ name: "", email: "" }); // Lưu giá trị ban đầu
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -166,7 +167,9 @@ function ProfilePage() {
   const fetchProfile = async () => {
     try {
       const res = await api.get(`/profile`);
-      setUser(res.data.user || res.data);
+      const userData = res.data.user || res.data;
+      setUser(userData);
+      setOriginalUser({ name: userData.name, email: userData.email }); // Lưu giá trị ban đầu
       setLoading(false);
     } catch (err) {
       console.error("❌ Lỗi khi tải thông tin cá nhân:", err);
@@ -183,6 +186,7 @@ function ProfilePage() {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
+    // Kiểm tra mật khẩu mới nếu có
     if (newPassword) {
       if (newPassword.length < 6) {
         addToast("Mật khẩu mới phải có ít nhất 6 ký tự", "warning");
@@ -194,15 +198,37 @@ function ProfilePage() {
       }
     }
 
+    // Kiểm tra xem có thay đổi gì không
+    const nameChanged = user.name !== originalUser.name;
+    const emailChanged = user.email !== originalUser.email;
+    const passwordChanged = newPassword && newPassword.trim() !== "";
+    
+    const hasChanges = nameChanged || emailChanged || passwordChanged;
+
+    if (!hasChanges) {
+      addToast("Không có thay đổi nào để lưu", "info");
+      return;
+    }
+
     try {
       const payload = { name: user.name, email: user.email };
       if (newPassword) payload.password = newPassword;
       await api.put("/profile", payload);
 
-      addToast("Cập nhật thông tin thành công", "success");
+      // Chỉ hiện thông báo khi có thay đổi thực sự
+      const changedFields = [];
+      if (nameChanged) changedFields.push("tên");
+      if (emailChanged) changedFields.push("email");
+      if (passwordChanged) changedFields.push("mật khẩu");
+      
+      const changeMessage = changedFields.length > 0 
+        ? `Cập nhật ${changedFields.join(", ")} thành công`
+        : "Cập nhật thông tin thành công";
+      
+      addToast(changeMessage, "success");
       setNewPassword("");
       setConfirmNewPassword("");
-      fetchProfile();
+      fetchProfile(); // Reload để cập nhật originalUser
     } catch (err) {
       console.error("❌ Lỗi khi cập nhật:", err);
       addToast(err.response?.data?.message || "Cập nhật thất bại", "error");

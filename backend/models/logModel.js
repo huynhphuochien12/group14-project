@@ -58,6 +58,8 @@ const logSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+}, {
+  timestamps: true, // Tự động thêm createdAt và updatedAt
 });
 
 // Index để query nhanh hơn

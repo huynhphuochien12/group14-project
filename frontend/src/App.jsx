@@ -10,6 +10,7 @@ import ForgotPasswordForm from "./components/auth/ForgotPasswordForm";
 import ResetPasswordForm from "./components/auth/ResetPasswordForm";
 import ProtectedRoute from "./components/shared/ProtectedRoute";
 import AdminUserList from "./components/admin/AdminUserList";
+import AdminLogs from "./components/admin/AdminLogs";
 import HomePage from "./pages/HomePage";
 import AddUser from "./components/AddUser";
 
@@ -43,20 +44,32 @@ function App() {
             }
           />
 
-          {/* ⚙️ Quản trị (chỉ dành cho admin) */}
+          {/* ⚙️ Quản trị (Admin & Moderator) */}
           <Route
             path="/admin"
             element={
-              <ProtectedRoute requiredRole="admin">
+              <ProtectedRoute requiredRoles={["admin", "moderator"]}>
                 <AdminUserList />
               </ProtectedRoute>
             }
           />
+          
+          {/* ➕ Thêm user (chỉ Admin) */}
           <Route
             path="/admin/add"
             element={
               <ProtectedRoute requiredRole="admin">
                 <AddUser />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 📊 User Activity Logs (chỉ Admin) */}
+          <Route
+            path="/admin/logs"
+            element={
+              <ProtectedRoute requiredRole="admin">
+                <AdminLogs />
               </ProtectedRoute>
             }
           />

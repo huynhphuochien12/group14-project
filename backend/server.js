@@ -13,10 +13,12 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const logRoutes = require("./routes/logRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/logs", logRoutes);
 
 // Kết nối MongoDB
 if (!process.env.MONGO_URI) {

@@ -12,7 +12,7 @@ export default function HomePage(){
 
           <div className="hero-ctas">
             <Link to="/login" className="btn">Đăng nhập</Link>
-            <Link to="/register" className="btn secondary">Tạo tài khoản</Link>
+            <Link to="/signup" className="btn secondary">Tạo tài khoản</Link>
           </div>
         </div>
 

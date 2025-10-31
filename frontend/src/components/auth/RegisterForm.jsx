@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 const RegisterForm = () => {
   const [form, setForm] = useState({ name: "", email: "", password: "" });
@@ -9,6 +10,7 @@ const RegisterForm = () => {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,9 +27,21 @@ const RegisterForm = () => {
     }
 
     try {
+      // Đăng ký
       await api.post("/auth/register", form);
       addToast("Đăng ký thành công!", 'success');
-      navigate("/login");
+      
+      // Tự động đăng nhập sau khi đăng ký
+      const loginRes = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password
+      });
+      
+      const { accessToken, refreshToken, user } = loginRes.data;
+      login(accessToken, refreshToken, user);
+      
+      addToast("Đã đăng nhập!", 'success');
+      navigate("/profile");
     } catch (err) {
       console.error(err);
       addToast(err.response?.data?.message || "Lỗi khi đăng ký", 'error');

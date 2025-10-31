@@ -13,17 +13,27 @@ function AddUser() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!name || !email || !password) return addToast('Vui lòng điền đủ thông tin', 'warning');
-    if (password.length < 6) return addToast('Mật khẩu phải có ít nhất 6 ký tự', 'warning');
+    if (!name || !email || !password) {
+      addToast('Vui lòng điền đủ thông tin', 'warning');
+      return;
+    }
+    if (password.length < 6) {
+      addToast('Mật khẩu phải có ít nhất 6 ký tự', 'warning');
+      return;
+    }
 
     api.post("/users", { name, email, password, role })
-      .then(() => {
-        addToast('Tạo user thành công', 'success');
-        navigate("/admin");
+      .then((res) => {
+        const roleText = role === "admin" ? "Admin" : role === "moderator" ? "Moderator" : "User";
+        addToast(`✅ Tạo user "${name}" (${roleText}) thành công!`, 'success');
+        // Đợi một chút để user thấy thông báo trước khi redirect
+        setTimeout(() => {
+          navigate("/admin");
+        }, 1000);
       })
       .catch(err => {
         console.error(err);
-        addToast(err.response?.data?.message || 'Lỗi khi tạo user', 'error');
+        addToast(err.response?.data?.message || '❌ Lỗi khi tạo user', 'error');
       });
   };
 
@@ -52,6 +62,7 @@ function AddUser() {
             <label>Quyền</label>
             <select value={role} onChange={(e) => setRole(e.target.value)}>
               <option value="user">User</option>
+              <option value="moderator">Moderator</option>
               <option value="admin">Admin</option>
             </select>
           </div>

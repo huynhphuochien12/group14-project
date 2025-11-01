@@ -15,12 +15,12 @@ export default function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Lấy token từ URL query params
   useEffect(() => {
+    // Lấy token từ URL query params
     const tokenFromUrl = searchParams.get("token");
     if (!tokenFromUrl) {
-      addToast("⚠️ Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn", "warning");
-      setTimeout(() => navigate("/login"), 2000);
+      addToast("Link đặt lại mật khẩu không hợp lệ", "error");
+      navigate("/login");
     } else {
       setToken(tokenFromUrl);
     }
@@ -31,17 +31,17 @@ export default function ResetPasswordForm() {
 
     // Validation
     if (!password || !confirmPassword) {
-      addToast("⚠️ Vui lòng nhập đầy đủ thông tin", "warning");
+      addToast("Vui lòng nhập đầy đủ thông tin", "warning");
       return;
     }
 
     if (password.length < 6) {
-      addToast("❌ Mật khẩu phải có ít nhất 6 ký tự", "error");
+      addToast("Mật khẩu phải có ít nhất 6 ký tự", "error");
       return;
     }
 
     if (password !== confirmPassword) {
-      addToast("❌ Mật khẩu xác nhận không khớp", "error");
+      addToast("Mật khẩu xác nhận không khớp", "error");
       return;
     }
 
@@ -51,6 +51,8 @@ export default function ResetPasswordForm() {
         token,
         password,
       });
+
+      console.log("Reset password response:", response.data);
 
       setSuccess(true);
       addToast("✅ " + (response.data.message || "Đổi mật khẩu thành công!"), "success");
@@ -62,7 +64,7 @@ export default function ResetPasswordForm() {
     } catch (err) {
       console.error("Reset password error:", err);
       addToast(
-        err.response?.data?.message || "❌ Lỗi khi đặt lại mật khẩu",
+        err.response?.data?.message || "Lỗi khi đặt lại mật khẩu",
         "error"
       );
     } finally {
@@ -96,9 +98,7 @@ export default function ResetPasswordForm() {
         </div>
 
         <h2 style={styles.title}>Đặt Lại Mật Khẩu</h2>
-        <p style={styles.description}>
-          Nhập mật khẩu mới của bạn bên dưới.
-        </p>
+        <p style={styles.description}>Nhập mật khẩu mới của bạn bên dưới.</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.inputGroup}>
@@ -120,9 +120,7 @@ export default function ResetPasswordForm() {
                 </span>
               )}
               {password.length >= 6 && (
-                <span style={{ color: "#10b981" }}>
-                  ✓ Độ dài hợp lệ
-                </span>
+                <span style={{ color: "#10b981" }}>✓ Độ dài hợp lệ</span>
               )}
             </div>
           </div>
@@ -139,17 +137,16 @@ export default function ResetPasswordForm() {
               required
             />
             <div style={styles.passwordHint}>
-              {confirmPassword && (
-                <span
-                  style={{
-                    color: password === confirmPassword ? "#10b981" : "#ef4444",
-                  }}
-                >
-                  {password === confirmPassword
-                    ? "✓ Mật khẩu khớp"
-                    : "⚠️ Mật khẩu không khớp"}
-                </span>
-              )}
+              {confirmPassword.length > 0 &&
+                password !== confirmPassword && (
+                  <span style={{ color: "#ef4444" }}>
+                    ⚠️ Mật khẩu không khớp
+                  </span>
+                )}
+              {confirmPassword.length > 0 &&
+                password === confirmPassword && (
+                  <span style={{ color: "#10b981" }}>✓ Mật khẩu khớp</span>
+                )}
             </div>
           </div>
 
@@ -157,9 +154,9 @@ export default function ResetPasswordForm() {
             type="submit"
             className="btn"
             disabled={loading || password !== confirmPassword || password.length < 6}
-            style={{ width: "100%", marginTop: 16 }}
+            style={{ width: "100%", marginTop: 8 }}
           >
-            {loading ? "⏳ Đang xử lý..." : "� Đặt lại mật khẩu"}
+            {loading ? "⏳ Đang xử lý..." : "🔐 Đặt Lại Mật Khẩu"}
           </button>
         </form>
 
@@ -197,7 +194,6 @@ const styles = {
   icon: {
     fontSize: "64px",
     display: "inline-block",
-    animation: "pulse 2s infinite",
   },
   successIcon: {
     fontSize: "64px",
@@ -225,41 +221,40 @@ const styles = {
     marginBottom: "24px",
   },
   form: {
-    marginBottom: "24px",
+    marginTop: "24px",
   },
   inputGroup: {
     marginBottom: "16px",
   },
   label: {
     display: "block",
-    marginBottom: "8px",
     fontSize: "14px",
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#374151",
+    marginBottom: "8px",
   },
   input: {
     width: "100%",
-    padding: "10px 12px",
-    borderRadius: "6px",
-    border: "1px solid #d1d5db",
-    fontSize: "14px",
-    transition: "border-color 0.15s ease",
+    padding: "12px 16px",
+    border: "2px solid #e5e7eb",
+    borderRadius: "8px",
+    fontSize: "15px",
+    transition: "all 0.3s",
+    boxSizing: "border-box",
   },
   passwordHint: {
     marginTop: "6px",
-    fontSize: "12px",
-    minHeight: "18px",
+    fontSize: "13px",
+    minHeight: "20px",
   },
   footer: {
+    marginTop: "24px",
     textAlign: "center",
-    marginTop: "16px",
   },
   link: {
-    color: "#6b7280",
+    color: "#667eea",
     textDecoration: "none",
     fontSize: "14px",
-    "&:hover": {
-      textDecoration: "underline",
-    },
+    fontWeight: "500",
   },
 };

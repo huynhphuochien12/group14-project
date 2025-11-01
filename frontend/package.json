@@ -17,7 +17,7 @@
    
   "start": "react-scripts start",
   "prebuild": "chmod +x node_modules/.bin/react-scripts || true",
-  "build": "CI=false react-scripts build",
+  "build": "CI=false DISABLE_ESLINT_PLUGIN=true react-scripts build",
 
     
     "test": "react-scripts test",

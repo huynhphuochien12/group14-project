@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
+import { useToast } from "../../contexts/ToastContext";
 import "../../App.css";
 
 export default function ForgotPasswordForm() {

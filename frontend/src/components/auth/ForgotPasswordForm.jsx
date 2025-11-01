@@ -7,6 +7,7 @@ export default function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [devToken, setDevToken] = useState(null);
   const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
@@ -17,7 +18,7 @@ export default function ForgotPasswordForm() {
       return;
     }
 
-    // Email validation
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       addToast("Email không hợp lệ", "error");
@@ -27,17 +28,22 @@ export default function ForgotPasswordForm() {
     setLoading(true);
     try {
       const response = await api.post("/auth/forgot-password", { email });
-      
+
       console.log("Forgot password response:", response.data);
-      
+
       setSent(true);
-      addToast("✅ " + (response.data.message || "Email đã được gửi!"), "success");
-      
-      // Nếu có resetUrl (dev mode), log ra
+      addToast(
+        "✅ " + (response.data.message || "Email đã được gửi!"),
+        "success"
+      );
+
       if (response.data.resetUrl) {
         console.log("🔗 Reset URL (dev):", response.data.resetUrl);
         addToast("Check console for reset link (dev mode)", "info");
       }
+
+      if (response.data?.resetToken) setDevToken(response.data.resetToken);
+      setEmail("");
     } catch (err) {
       console.error("Forgot password error:", err);
       addToast(
@@ -85,7 +91,7 @@ export default function ForgotPasswordForm() {
         <div style={styles.iconWrapper}>
           <div style={styles.icon}>🔐</div>
         </div>
-        
+
         <h2 style={styles.title}>Quên Mật Khẩu?</h2>
         <p style={styles.description}>
           Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.
@@ -114,6 +120,22 @@ export default function ForgotPasswordForm() {
             {loading ? "⏳ Đang gửi..." : "📧 Gửi Email Đặt Lại Mật Khẩu"}
           </button>
         </form>
+
+        {devToken && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 13 }}>DEV reset token (dùng để test reset):</p>
+            <pre
+              style={{
+                background: "#f3f4f6",
+                padding: 8,
+                borderRadius: 6,
+                overflowX: "auto",
+              }}
+            >
+              {devToken}
+            </pre>
+          </div>
+        )}
 
         <div style={styles.footer}>
           <a href="/login" style={styles.link}>

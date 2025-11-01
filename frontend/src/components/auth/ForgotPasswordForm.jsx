@@ -1,47 +1,58 @@
 import React, { useState } from "react";
+
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import "../../App.css";
 
 export default function ForgotPasswordForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [devToken, setDevToken] = useState(null);
   const { addToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email) {
-      addToast("Vui lòng nhập email", "warning");
+      addToast("⚠️ Vui lòng nhập email", "warning");
       return;
     }
 
-    // Email validation
+    // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      addToast("Email không hợp lệ", "error");
+      addToast("❌ Email không hợp lệ", "error");
       return;
     }
 
     setLoading(true);
     try {
       const response = await api.post("/auth/forgot-password", { email });
-      
       console.log("Forgot password response:", response.data);
-      
+
       setSent(true);
-      addToast("✅ " + (response.data.message || "Email đã được gửi!"), "success");
-      
-      // Nếu có resetUrl (dev mode), log ra
-      if (response.data.resetUrl) {
-        console.log("🔗 Reset URL (dev):", response.data.resetUrl);
-        addToast("Check console for reset link (dev mode)", "info");
+      addToast(
+        "✅ " + (response.data.message || "Đã gửi email hướng dẫn!"),
+        "success"
+      );
+
+      // For development testing
+      if (response.data.resetToken) {
+        setDevToken(response.data.resetToken);
+        if (response.data.resetUrl) {
+          console.log("🔗 Reset URL (dev):", response.data.resetUrl);
+        }
       }
+
+      setEmail("");
     } catch (err) {
       console.error("Forgot password error:", err);
       addToast(
-        err.response?.data?.message || "Lỗi khi gửi email đặt lại mật khẩu",
+        err.response?.data?.message || "❌ Lỗi khi gửi email đặt lại mật khẩu",
         "error"
       );
     } finally {
@@ -85,7 +96,7 @@ export default function ForgotPasswordForm() {
         <div style={styles.iconWrapper}>
           <div style={styles.icon}>🔐</div>
         </div>
-        
+
         <h2 style={styles.title}>Quên Mật Khẩu?</h2>
         <p style={styles.description}>
           Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.
@@ -114,6 +125,22 @@ export default function ForgotPasswordForm() {
             {loading ? "⏳ Đang gửi..." : "📧 Gửi Email Đặt Lại Mật Khẩu"}
           </button>
         </form>
+
+        {devToken && (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontSize: 13 }}>DEV reset token (dùng để test reset):</p>
+            <pre
+              style={{
+                background: "#f3f4f6",
+                padding: 8,
+                borderRadius: 6,
+                overflowX: "auto",
+              }}
+            >
+              {devToken}
+            </pre>
+          </div>
+        )}
 
         <div style={styles.footer}>
           <a href="/login" style={styles.link}>

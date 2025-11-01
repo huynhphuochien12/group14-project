@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
+import api from "../../services/api"; // axios có baseURL: http://localhost:5000/api
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");

@@ -1,9 +1,13 @@
 import React, { useState } from "react";
+
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../../contexts/ToastContext";
 import api from "../../services/api";
 import { useToast } from "../../contexts/ToastContext";
 import "../../App.css";
 
 export default function ForgotPasswordForm() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -14,40 +18,41 @@ export default function ForgotPasswordForm() {
     e.preventDefault();
 
     if (!email) {
-      addToast("Vui lòng nhập email", "warning");
+      addToast("⚠️ Vui lòng nhập email", "warning");
       return;
     }
 
     // Kiểm tra định dạng email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      addToast("Email không hợp lệ", "error");
+      addToast("❌ Email không hợp lệ", "error");
       return;
     }
 
     setLoading(true);
     try {
       const response = await api.post("/auth/forgot-password", { email });
-
       console.log("Forgot password response:", response.data);
 
       setSent(true);
       addToast(
-        "✅ " + (response.data.message || "Email đã được gửi!"),
+        "✅ " + (response.data.message || "Đã gửi email hướng dẫn!"),
         "success"
       );
 
-      if (response.data.resetUrl) {
-        console.log("🔗 Reset URL (dev):", response.data.resetUrl);
-        addToast("Check console for reset link (dev mode)", "info");
+      // For development testing
+      if (response.data.resetToken) {
+        setDevToken(response.data.resetToken);
+        if (response.data.resetUrl) {
+          console.log("🔗 Reset URL (dev):", response.data.resetUrl);
+        }
       }
 
-      if (response.data?.resetToken) setDevToken(response.data.resetToken);
       setEmail("");
     } catch (err) {
       console.error("Forgot password error:", err);
       addToast(
-        err.response?.data?.message || "Lỗi khi gửi email đặt lại mật khẩu",
+        err.response?.data?.message || "❌ Lỗi khi gửi email đặt lại mật khẩu",
         "error"
       );
     } finally {
